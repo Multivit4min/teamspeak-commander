@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "lib": ["es2018"],
+    "module": "commonjs",
+    "target": "es2018",
+    "moduleResolution": "node",
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "outDir": "lib",
+    "declaration": true,
+    "baseUrl": "./src",
+  },
+  "include": ["./src"],
+  "typedocOptions": {
+      "mode": "file",
+      "out": "docs",
+      "name": "TS3-NodeJS-Library",
+      "exclude": "**/*+.spec.ts",
+      "excludeExternals": true
+  }
+}

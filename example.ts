@@ -12,6 +12,4 @@ commander.register("ping")
 
 
 TeamSpeak.connect({})
-  .then(teamspeak => {
-    commander.addInstance(teamspeak)
-  })
+  .then(teamspeak => commander.addInstance(teamspeak))

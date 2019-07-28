@@ -21,6 +21,34 @@ describe("Command", () => {
     })
   })
 
+  describe("getHelp()", () => {
+    it("should test an empty help text", () => {
+      expect(command.getHelp()).toBe("")
+    })
+  
+    it("should test a custom help text", () => {
+      command.setHelp("foobar")
+      expect(command.getHelp()).toBe("foobar")
+    })
+  })
+
+  describe("getManual()", () => {
+    it("should test an empty manual text", () => {
+      expect(command.getManual()).toBe("")
+    })
+  
+    it("should test a single line manual text", () => {
+      command.setManual("foo")
+      expect(command.getManual()).toBe("foo")
+    })
+  
+    it("should test a multiline line manual text", () => {
+      command.setManual("foo")
+      command.setManual("bar")
+      expect(command.getManual()).toBe("foo\r\nbar")
+    })
+  })
+
   describe("isEnabled()", () => {
     it("should test if the command is enabled by default", () => {
       expect(command.isEnabled()).toBe(true)

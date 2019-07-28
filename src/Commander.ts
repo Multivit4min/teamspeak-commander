@@ -3,8 +3,9 @@ import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
 import { Command } from "./Command"
 
 export interface CommanderTextMessage extends TextMessage {
+  arguments: Record<string, any>,
   teamspeak: TeamSpeak,
-  reply: (msg: string) => void
+  reply: (msg: string) => Promise<any>
 }
 
 export interface CommanderOptions {
@@ -14,8 +15,8 @@ export interface CommanderOptions {
 export class Commander {
 
   readonly config: CommanderOptions
-  private instances: TeamSpeak[]
-  private commands: Command[]
+  private instances: TeamSpeak[] = []
+  private commands: Command[] = []
 
   constructor(config: Partial<CommanderOptions> = {}) {
     this.config = {
@@ -24,29 +25,27 @@ export class Commander {
     }
   }
 
-  private textMessageHandler(event: CommanderTextMessage) {
+  private async textMessageHandler(event: CommanderTextMessage) {
     if (event.invoker.isQuery()) return
     if (!this.isPossibleCommand(event.msg)) return
-    const match = event.msg.match(/^(?<command>\\S*)\\s*(?<args>.*)\\s*/s)
+    const match = event.msg.match(/^(?<command>\S*)\s*(?<args>.*)\s*/s)
     if (!match || !match.groups) return
     const { command, args } = match.groups
-    const commands = this.getAvailableCommands(command)
+    let commands = this.getAvailableCommands(command)
     if (commands.length === 0) return event.reply("no command found")
-    return Promise.all(commands.map(async cmd => {
-      if (!await cmd.hasPermission(event.invoker)) event.reply("no permissions")
-    }))
+    const result = await Promise.all(commands.map(async cmd =>  await cmd.hasPermission(event.invoker)))
+    commands = <Command[]>result.map((res, i) => res ? commands[i] : false).filter(res => res instanceof Command)
+    if (commands.length === 0) return event.reply("no permission to use this command")
+    commands.forEach(cmd => cmd.handleRequest(args, event))
   }
 
-  getReplyFunction(event: TextMessage, teamspeak: TeamSpeak) {
+  static getReplyFunction(event: TextMessage, teamspeak: TeamSpeak) {
     const { invoker } = event
     const { CLIENT, SERVER, CHANNEL } = TextMessageTargetMode
     switch (event.targetmode) {
-      case CLIENT:
-        return (msg: string) => teamspeak.sendTextMessage(invoker.clid, CLIENT, msg)
-      case CHANNEL:
-        return (msg: string) => teamspeak.sendTextMessage(invoker.cid, CHANNEL, msg)
-      case SERVER:
-        return (msg: string) => teamspeak.sendTextMessage(0, SERVER, msg)
+      case CLIENT: return (msg: string) => teamspeak.sendTextMessage(invoker.clid, CLIENT, msg)
+      case CHANNEL: return (msg: string) => teamspeak.sendTextMessage(invoker.cid, CHANNEL, msg)
+      case SERVER: return (msg: string) => teamspeak.sendTextMessage(0, SERVER, msg)
     }
   }
 
@@ -65,19 +64,26 @@ export class Commander {
     return this.commands.some(cmd => cmd.getFullCommandName() === text.split(" ")[0])
   }
 
-  register(command: string) {
+  /**
+   * creates a new command
+   * @param command the name of the command
+   */
+  createCommand(command: string) {
+    if (command.length === 0) throw new Error("Can not create a command with length of 0")
     const cmd = new Command(command, this)
     this.commands.push(cmd)
     return cmd
   }
 
+  /** adds a teamspeak instance to the command handler */
   addInstance(teamspeak: TeamSpeak) {
     this.instances.push(teamspeak)
     teamspeak.on("textmessage", (ev: TextMessage) => {
       this.textMessageHandler({
         ...ev,
         teamspeak,
-        reply: this.getReplyFunction(ev, teamspeak)
+        reply: Commander.getReplyFunction(ev, teamspeak),
+        arguments: {}
       })
     })
     return this

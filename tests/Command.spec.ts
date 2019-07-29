@@ -1,4 +1,4 @@
-import { Command } from "../src/Command"
+import { Command } from "../src/command/Command"
 import { Commander } from "../src/Commander"
 
 describe("Command", () => {

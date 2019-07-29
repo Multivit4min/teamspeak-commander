@@ -1,5 +1,5 @@
 /** class representing a SubCommandNotFound */
-export class SubCommandNotFound extends Error {
+export class CommandNotFoundError extends Error {
   constructor(err: string) {
       super(err)
   }

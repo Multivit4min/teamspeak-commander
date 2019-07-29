@@ -1,6 +1,6 @@
 import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library"
 import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
-import { Command } from "./Command"
+import { Command } from "./command/Command"
 
 export interface CommanderTextMessage extends TextMessage {
   arguments: Record<string, any>,
@@ -66,11 +66,11 @@ export class Commander {
 
   /**
    * creates a new command
-   * @param command the name of the command
+   * @param name the name of the command
    */
-  createCommand(command: string) {
-    if (command.length === 0) throw new Error("Can not create a command with length of 0")
-    const cmd = new Command(command, this)
+  createCommand(name: string) {
+    if (!Commander.isValidCommandName(name)) throw new Error("Can not create a command with length of 0")
+    const cmd = new Command(name, this)
     this.commands.push(cmd)
     return cmd
   }
@@ -89,4 +89,7 @@ export class Commander {
     return this
   }
 
+  static isValidCommandName(name: string) {
+    return name.length > 0
+  }
 }

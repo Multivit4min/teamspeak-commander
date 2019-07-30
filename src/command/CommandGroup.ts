@@ -26,7 +26,7 @@ export class CommandGroup extends BaseCommand {
   async hasPermission(client: TeamSpeakClient) {
     if (!await this.permCheck(client)) return false
     if (this.runHandler.length > 0) return true
-    return (await Promise.all(this.commands.map(cmd => cmd.hasPermission(client)))).every(result => result)
+    return (await Promise.all(this.commands.map(cmd => cmd.hasPermission(client)))).some(result => result)
   }
 
   /**

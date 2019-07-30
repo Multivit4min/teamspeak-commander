@@ -43,9 +43,13 @@ describe("Command", () => {
     })
   
     it("should test a multiline line manual text", () => {
-      command.setManual("foo")
-      command.setManual("bar")
+      command.setManual("foo").setManual("bar")
       expect(command.getManual()).toBe("foo\r\nbar")
+    })
+  
+    it("should clear a manual", () => {
+      command.setManual("foo").setManual("bar").clearManual()
+      expect(command.getManual()).toBe("")
     })
   })
 

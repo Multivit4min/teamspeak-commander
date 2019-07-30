@@ -1,22 +1,11 @@
 import { Commander, CommanderTextMessage } from "../Commander"
 import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
 import { Argument } from "../arguments/Argument"
-import { StringArgument } from "../arguments/StringArgument"
-import { NumberArgument } from "../arguments/NumberArgument"
-import { RestArgument } from "../arguments/RestArgument"
-import { ClientArgument } from "../arguments/ClientArgument"
 import { ParseError } from "../exceptions/ParseError"
 import { TooManyArguments } from "../exceptions/TooManyArgumentsError"
 import { BaseCommand } from "./BaseCommand"
-
-export interface ArgType {
-  string: StringArgument,
-  number: NumberArgument,
-  client: ClientArgument,
-  rest: RestArgument
-}
-
-export type argumentCreateHandler = (arg: ArgType) => Argument
+import { createArgumentLayer, createArgumentHandler } from "../arguments/ArgumentCreator"
+ 
 
 export class Command extends BaseCommand {
   private arguments: Argument[] = []
@@ -45,8 +34,8 @@ export class Command extends BaseCommand {
    * adds an argument to the command
    * @param argument an argument to add
    */
-  addArgument(callback: argumentCreateHandler) {
-    this.arguments.push(callback(Command.createArgumentLayer()))
+  addArgument(callback: createArgumentHandler) {
+    this.arguments.push(callback(createArgumentLayer()))
     return this
   }
 
@@ -93,13 +82,4 @@ export class Command extends BaseCommand {
     return { result: resolved, remaining: args, errors }
   }
 
-  /** creates new object with argument options */
-  static createArgumentLayer() {
-    return {
-      string: new StringArgument(),
-      number: new NumberArgument(),
-      client: new ClientArgument(),
-      rest: new RestArgument(),
-    }
-  }
 }

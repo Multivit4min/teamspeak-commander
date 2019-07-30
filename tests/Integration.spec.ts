@@ -1,6 +1,6 @@
 import { Commander, CommanderTextMessage } from "../src/Commander"
 import { TextMessageTargetMode } from "ts3-nodejs-library"
-import { ArgType } from "../src/command/Command"
+import { ArgType } from "../src/arguments/Argument"
 const runCallback = jest.fn()
 const replyCallback = jest.fn()
 
@@ -126,6 +126,53 @@ describe("Integration", () => {
         })
       })
     })
+  })
+
+  describe("CommandGroup", () => {
+    it("should with a simple grouped command", () => {
+      return new Promise(fulfill => {
+        commander
+          .createCommandGroup("foo")
+          .addCommand("bar")
+          .addArgument(arg => arg.rest.setName("param"))
+          .run(runCallback)
+  
+        commander["textMessageHandler"]({ ...dummyEvent, msg: "!foo bar asdf" })
+  
+        setImmediate(() => {
+          expect(replyCallback).toBeCalledTimes(0)
+          expect(runCallback).toBeCalledTimes(1)
+          expect(runCallback.mock.calls[0][0].invoker.nick).toBe("foo")
+          expect(runCallback.mock.calls[0][0].msg).toBe("!foo bar asdf")
+          expect(runCallback.mock.calls[0][0].arguments).toEqual({ param: "asdf" })
+          fulfill()
+        })
+      })
+    })
+
+    it("should with 2 commands in a grouped command", () => {
+      return new Promise(fulfill => {
+        const group = commander.createCommandGroup("foo")
+        group.addCommand("bar")
+          .addArgument(arg => arg.rest.setName("param"))
+          .run(runCallback)
+        group.addCommand("baz")
+          .addArgument(arg => arg.rest.setName("param"))
+          .run(runCallback)
+  
+        commander["textMessageHandler"]({ ...dummyEvent, msg: "!foo baz asdf" })
+  
+        setImmediate(() => {
+          expect(replyCallback).toBeCalledTimes(0)
+          expect(runCallback).toBeCalledTimes(1)
+          expect(runCallback.mock.calls[0][0].invoker.nick).toBe("foo")
+          expect(runCallback.mock.calls[0][0].msg).toBe("!foo baz asdf")
+          expect(runCallback.mock.calls[0][0].arguments).toEqual({ param: "asdf" })
+          fulfill()
+        })
+      })
+    })
+
   })
 
 })

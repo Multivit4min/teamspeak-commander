@@ -1,6 +1,8 @@
 import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library"
 import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
 import { Command } from "./command/Command"
+import { CommandGroup } from "./command/CommandGroup"
+import { BaseCommand } from "./command/BaseCommand"
 
 export interface CommanderTextMessage extends TextMessage {
   arguments: Record<string, any>,
@@ -16,7 +18,7 @@ export class Commander {
 
   readonly config: CommanderOptions
   private instances: TeamSpeak[] = []
-  private commands: Command[] = []
+  private commands: BaseCommand[] = []
 
   constructor(config: Partial<CommanderOptions> = {}) {
     this.config = {
@@ -33,8 +35,8 @@ export class Commander {
     const { command, args } = match.groups
     let commands = this.getAvailableCommands(command)
     if (commands.length === 0) return event.reply("no command found")
-    const result = await Promise.all(commands.map(async cmd =>  await cmd.hasPermission(event.invoker)))
-    commands = <Command[]>result.map((res, i) => res ? commands[i] : false).filter(res => res instanceof Command)
+    const result = await Promise.all(commands.map(async cmd => await cmd.hasPermission(event.invoker)))
+    commands = <BaseCommand[]>result.map((res, i) => res ? commands[i] : false).filter(res => res instanceof BaseCommand)
     if (commands.length === 0) return event.reply("no permission to use this command")
     commands.forEach(cmd => cmd.handleRequest(args, event))
   }
@@ -71,6 +73,17 @@ export class Commander {
   createCommand(name: string) {
     if (!Commander.isValidCommandName(name)) throw new Error("Can not create a command with length of 0")
     const cmd = new Command(name, this)
+    this.commands.push(cmd)
+    return cmd
+  }
+
+  /**
+   * creates a new command
+   * @param name the name of the command
+   */
+  createCommandGroup(name: string) {
+    if (!Commander.isValidCommandName(name)) throw new Error("Can not create a command with length of 0")
+    const cmd = new CommandGroup(name, this)
     this.commands.push(cmd)
     return cmd
   }

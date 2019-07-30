@@ -91,6 +91,7 @@ export abstract class BaseCommand {
    */
   setManual(text: string) {
     this.manual.push(text)
+    return this
   }
 
   /**

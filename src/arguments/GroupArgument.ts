@@ -1,14 +1,14 @@
 import { Argument } from "./Argument"
 import { ParseError } from "../exceptions/ParseError"
+import { createArgumentHandler, createArgumentLayer } from "./ArgumentCreator"
 
 export class GroupArgument extends Argument {
   private type: GroupArgument.Type
-  private args: Array<Argument>
+  private arguments: Argument[] = []
 
   constructor(type: GroupArgument.Type) {
     super()
     this.type = type
-    this.args = []
   }
 
   /**
@@ -20,7 +20,6 @@ export class GroupArgument extends Argument {
     switch (this.type) {
       case GroupArgument.Type.OR: return this.validateOr(args)
       case GroupArgument.Type.AND: return this.validateAnd(args)
-      default: throw new Error(`${this.type} not a valid Group Type`)
     }
   }
 
@@ -31,7 +30,7 @@ export class GroupArgument extends Argument {
   private validateOr(args: string) {
     const errors = []
     const resolved: Record<string, any> = {}
-    const valid = this.args.some(arg => {
+    const valid = this.arguments.some(arg => {
       try {
         const result = arg.validate(args)
         resolved[arg.getName()] = result[0]
@@ -52,7 +51,7 @@ export class GroupArgument extends Argument {
   private validateAnd(args: string) {
     const resolved: Record<string, any> = {}
     let error = null
-    this.args.some(arg => {
+    this.arguments.some(arg => {
       try {
         const result = arg.validate(args)
         resolved[arg.getName()] = result[0]
@@ -67,11 +66,11 @@ export class GroupArgument extends Argument {
   }
 
   /**
-   * Adds one or multiple argument to the validation chain
-   * @param args the remaining args
+   * adds an argument to the command
+   * @param argument an argument to add
    */
-  argument(...args: Argument[]) {
-    this.args.push(...args)
+  addArgument(callback: createArgumentHandler) {
+    this.arguments.push(callback(createArgumentLayer()))
     return this
   }
 }

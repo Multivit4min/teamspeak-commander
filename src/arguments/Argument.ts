@@ -1,17 +1,11 @@
 export abstract class Argument {
-  private opt: boolean
-  private name: string
-  private display: string
-  private displayDefault: boolean
-  private default: any
+  private opt: boolean = false
+  private name: string = "_"
+  private display: string = "_"
+  private displayDefault: boolean = true
+  private default: any = undefined
 
-  constructor() {
-    this.opt = false
-    this.name = "_"
-    this.display = "_"
-    this.displayDefault = true
-    this.default = undefined
-  }
+  abstract validate(args: string): Array<any>
 
   /**
    * Sets an Argument as optional
@@ -76,6 +70,4 @@ export abstract class Argument {
   getName() {
     return this.name
   }
-
-  abstract validate(args: string): Array<any>
 }

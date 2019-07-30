@@ -48,7 +48,7 @@ export class StringArgument extends Argument {
    * Sets the maximum Length of the String
    * @param len the maximum length of the argument
    */
-  max(len: number) {
+  maximum(len: number) {
     this.maxlen = len
     return this
   }
@@ -57,7 +57,7 @@ export class StringArgument extends Argument {
    * Sets the minimum Length of the String
    * @param len the minimum length of the argument
    */
-  min(len: number) {
+  minimum(len: number) {
     this.minlen = len
     return this
   }

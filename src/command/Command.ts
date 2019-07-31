@@ -2,7 +2,7 @@ import { Commander, CommanderTextMessage } from "../Commander"
 import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
 import { Argument } from "../arguments/Argument"
 import { ParseError } from "../exceptions/ParseError"
-import { TooManyArguments } from "../exceptions/TooManyArgumentsError"
+import { TooManyArgumentsError } from "../exceptions/TooManyArgumentsError"
 import { BaseCommand } from "./BaseCommand"
 import { createArgumentLayer, createArgumentHandler } from "../arguments/ArgumentCreator"
  
@@ -50,7 +50,7 @@ export class Command extends BaseCommand {
    */
   validate(args: string) {
     const { result, errors, remaining } = this.validateArgs(args)
-    if (remaining.length > 0) throw new TooManyArguments(`Too many argument!`, errors.length > 0 ? errors[0] : undefined)
+    if (remaining.length > 0) throw new TooManyArgumentsError(`Too many argument!`, errors.length > 0 ? errors[0] : undefined)
     return result
   }
 

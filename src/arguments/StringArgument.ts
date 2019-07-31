@@ -15,8 +15,8 @@ export class StringArgument extends Argument {
    */
   validate(args: string) {
     const argArray = args.split(" ")
-    const str = argArray.shift()
-    return this._validate(str||"", argArray.join(" "))
+    const str = <string>argArray.shift()
+    return this._validate(str, argArray.join(" "))
   }
 
   /**
@@ -25,7 +25,6 @@ export class StringArgument extends Argument {
    * @param rest the remaining args
    */
   protected _validate(arg: string, ...rest: string[]) {
-    if (typeof arg !== "string") throw new ParseError(`Given input is not typeof string (typeof ${typeof arg})`, this)
     if (this.uppercase) arg = arg.toUpperCase()
     if (this.lowercase) arg = arg.toLowerCase()
     if (this.minlen !== null && this.minlen > arg.length) throw new ParseError(`String length not greater or equal! Expected at least ${this.minlen}, but got ${arg.length}`, this)

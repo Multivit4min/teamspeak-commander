@@ -33,7 +33,7 @@ describe("Argument", () => {
   
     it("should validate #getManual() on an optional argument with display parameter", () => {
       arg.setName("foobar")
-      expect(arg.getManual()).toBe("foobar")
+      expect(arg.getManual()).toBe("<foobar>")
     })
   })
 })

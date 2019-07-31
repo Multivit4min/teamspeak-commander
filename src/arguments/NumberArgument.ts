@@ -14,9 +14,7 @@ export class NumberArgument extends Argument {
    */
   validate(args: string) {
     const argArray = args.split(" ")
-    const arg = argArray.shift()
-    if (arg === undefined) throw new ParseError(`Expected a Number but got undefined`, this)
-    if (isNaN(parseInt(arg, 10)) || arg === undefined) throw new ParseError(`"${arg}" is not a number"`, this)
+    const arg = <string>argArray.shift()
     const num = parseFloat(arg)
     if (isNaN(num)) throw new ParseError(`"${arg}" is not a valid number`, this)
     if (this.min !== null && this.min > num) throw new ParseError(`Number not greater or equal! Expected at least ${this.min}, but got ${num}`, this)

@@ -16,6 +16,10 @@ describe("Integration", () => {
     expect(arg.validate("10 foo bar")).toEqual([10, "foo bar"])
   })
 
+  it("should throw an error when a non numeric gets received", () => {
+    expect(() => arg.validate("foo bar")).toThrow(ParseError)
+  })
+
   describe("#minimum()", () => {
     it("should throw an error", () => {
       expect(() => arg.minimum(10).validate("9")).toThrow(ParseError)

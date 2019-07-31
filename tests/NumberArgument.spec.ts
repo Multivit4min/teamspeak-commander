@@ -13,11 +13,15 @@ describe("Integration", () => {
   })
 
   it("should parse a number with additional parameters successfully", () => {
-    expect(arg.validate("10 foo bar")).toEqual([10, "foo bar"])
+    expect(arg.validate("-10.2 foo bar")).toEqual([-10.2, "foo bar"])
   })
 
   it("should throw an error when a non numeric gets received", () => {
     expect(() => arg.validate("foo bar")).toThrow(ParseError)
+  })
+
+  it("should throw an error when a non numeric with a numeric prefix gets received", () => {
+    expect(() => arg.validate("10foo bar")).toThrow(ParseError)
   })
 
   describe("#minimum()", () => {

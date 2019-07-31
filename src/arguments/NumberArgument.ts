@@ -16,7 +16,7 @@ export class NumberArgument extends Argument {
     const argArray = args.split(" ")
     const arg = <string>argArray.shift()
     const num = parseFloat(arg)
-    if (isNaN(num)) throw new ParseError(`"${arg}" is not a valid number`, this)
+    if (!(/^-?\d+(\.\d+)?$/).test(arg) || isNaN(num)) throw new ParseError(`"${arg}" is not a valid number`, this)
     if (this.min !== null && this.min > num) throw new ParseError(`Number not greater or equal! Expected at least ${this.min}, but got ${num}`, this)
     if (this.max !== null && this.max < num) throw new ParseError(`Number not less or equal! Expected at least ${this.max}, but got ${num}`, this)
     if (this.int && num % 1 !== 0) throw new ParseError(`Given Number is not an Integer! (${num})`, this)

@@ -19,7 +19,7 @@ export class Command extends BaseCommand {
    * @returns retrieves the complete usage of the command with its argument names
    */
   getUsage() {
-    return `${this.getFullCommandName()} ${this.getArguments().map(arg => arg.getManual()).join(" ")}`
+    return `${this.getCommandName()} ${this.getArguments().map(arg => arg.getManual()).join(" ")}`
   }
 
   /**

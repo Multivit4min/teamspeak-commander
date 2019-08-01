@@ -62,9 +62,19 @@ export abstract class BaseCommand {
     return this
   }
 
+  /** returns a boolean wether a help text has been set or not */
+  hasHelp() {
+    return this.help !== ""
+  }
+
   /** retrieves the current manual text */
   getManual() {
     return this.manual.join("\r\n")
+  }
+
+  /** returns a boolean wether a help text has been set or not */
+  hasManual() {
+    return this.manual.length > 0
   }
 
   /**

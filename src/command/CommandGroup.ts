@@ -65,8 +65,8 @@ export class CommandGroup extends BaseCommand {
     const cmds = this.commands
       .filter(c => c.getCommandName() === cmd || !cmd)
       .filter(c => c.isEnabled())
-    if (!client) return cmds
-    return cmds.filter(c => c.hasPermission(client))
+    if (!client) return Promise.resolve(cmds)
+    return this.commander.checkPermissions(cmds, client)
   }
 
   handleRequest(args: string, ev: CommanderTextMessage) {

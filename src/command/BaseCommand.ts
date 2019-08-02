@@ -1,5 +1,7 @@
 import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
 import { Commander, CommanderTextMessage } from "../Commander"
+import { Throttle } from "../util/Throttle"
+import { ThrottleError } from "../exceptions/ThrottleError"
 
 export type permissionHandler = (invoker: TeamSpeakClient) => Promise<boolean>|boolean
 export type runHandler = (event: CommanderTextMessage) => void
@@ -13,6 +15,7 @@ export abstract class BaseCommand {
   private manual: string[] = []
   private name: string
   private enabled: boolean = true
+  private throttle: Throttle
 
   constructor(cmd: string, commander: Commander) {
     this.name = cmd
@@ -122,6 +125,25 @@ export abstract class BaseCommand {
   }
 
   /**
+   * adds an instance of a throttle class
+   * @param throttle adds the throttle instance
+   */
+  addThrottle(throttle: Throttle) {
+    this.throttle = throttle
+    return this
+  }
+
+  private handleThrottle(client: TeamSpeakClient) {
+    if (!(this.throttle instanceof Throttle)) return
+    if (this.throttle.isThrottled(client)) {
+      const time = (this.throttle.timeTillNextCommand(client) / 1000).toFixed(1)
+      throw new ThrottleError(`You can use this command again in ${time} seconds!`)
+    } else {
+      this.throttle.throttle(client)
+    }
+  }
+
+  /**
    * register a permission handler for this command
    * @param callback gets called whenever the permission for a client gets checked
    */
@@ -135,6 +157,7 @@ export abstract class BaseCommand {
   }
 
   protected dispatchCommand(ev: CommanderTextMessage) {
+    this.handleThrottle(ev.invoker)
     this.runHandler.forEach(handle => handle({...ev}))
   }
 }

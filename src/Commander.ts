@@ -9,6 +9,7 @@ import { ParseError } from "./exceptions/ParseError"
 import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
 import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { Throttle } from "./util/Throttle"
 
 declare interface helpTexts {
   name: string,
@@ -37,6 +38,11 @@ export class Commander {
       ...config
     }
     this.registerBaseCommands()
+  }
+
+  /** creates a new Throttle instance */
+  static createThrottle() {
+    return new Throttle()
   }
 
   private registerBaseCommands() {

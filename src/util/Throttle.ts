@@ -65,6 +65,7 @@ export class Throttle {
    */
   private restorePoints(id: string) {
     const throttle = this.throttled[id]
+    if (throttle === undefined) return
     throttle.points += this.restore
     if (throttle.points >= this.initial) {
       Reflect.deleteProperty(this.throttled, id)

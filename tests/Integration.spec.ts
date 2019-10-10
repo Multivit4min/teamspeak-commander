@@ -1,5 +1,5 @@
 import { Commander, CommanderTextMessage } from "../src/Commander"
-import { TextMessageTargetMode } from "ts3-nodejs-library"
+import { TextMessageTargetMode } from "../src/util/types"
 import { ArgType } from "../src/arguments/ArgumentCreator"
 const runCallback = jest.fn()
 const replyCallback = jest.fn()

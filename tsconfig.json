@@ -17,7 +17,7 @@
   "typedocOptions": {
       "mode": "file",
       "out": "docs",
-      "name": "TS3-NodeJS-Library",
+      "name": "TeamSpeak-Commander",
       "exclude": "**/*+.spec.ts",
       "excludeExternals": true
   }

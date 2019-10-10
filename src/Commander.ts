@@ -1,5 +1,5 @@
-import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library"
-import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
+import { TeamSpeak, TextMessageTargetMode } from "./util/types"
+import { TextMessage } from "./util/types"
 import { Command } from "./command/Command"
 import { CommandGroup } from "./command/CommandGroup"
 import { BaseCommand } from "./command/BaseCommand"
@@ -8,7 +8,7 @@ import { ThrottleError } from "./exceptions/ThrottleError"
 import { ParseError } from "./exceptions/ParseError"
 import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
-import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { TeamSpeakClient } from "./util/types"
 import { Throttle } from "./util/Throttle"
 
 declare interface helpTexts {

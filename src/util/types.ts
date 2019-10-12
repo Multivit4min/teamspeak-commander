@@ -1,7 +1,7 @@
 export interface TeamSpeak {
   sendTextMessage(target: number, targetmode: TextMessageTargetMode, msg: string): Promise<any>
   registerEvent(event: string, id?: number): Promise<any>
-  on(name: string, cb: (data: any) => any): any
+  on(event: "textmessage", listener: (event: TextMessage) => void): this
 }
 
 export interface TeamSpeakClient {

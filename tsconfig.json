@@ -11,7 +11,7 @@
     "alwaysStrict": true,
     "outDir": "lib",
     "declaration": true,
-    "baseUrl": "./src",
+    "baseUrl": "./src"
   },
   "include": ["./src"],
   "typedocOptions": {

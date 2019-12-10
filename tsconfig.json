@@ -11,6 +11,7 @@
     "alwaysStrict": true,
     "outDir": "lib",
     "declaration": true,
+    "esModuleInterop": true,
     "baseUrl": "./src"
   },
   "include": ["./src"],

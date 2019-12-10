@@ -1,5 +1,10 @@
-import { TeamSpeak, TextMessageTargetMode } from "./util/types"
-import { TextMessage } from "./util/types"
+import {
+  CommanderTextMessage,
+  TranslationString,
+  TranslationStringGetter
+} from "./util/types"
+import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library/src/TeamSpeak"
+import { TeamSpeakClient } from "ts3-nodejs-library/src/node/Client"
 import { Command } from "./command/Command"
 import { CommandGroup } from "./command/CommandGroup"
 import { BaseCommand } from "./command/BaseCommand"
@@ -8,22 +13,21 @@ import { ThrottleError } from "./exceptions/ThrottleError"
 import { ParseError } from "./exceptions/ParseError"
 import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
-import { TeamSpeakClient } from "./util/types"
 import { Throttle } from "./util/Throttle"
+import { TextMessage } from "ts3-nodejs-library/src/types/Events"
 
-declare interface helpTexts {
-  name: string,
-  help: string
-}
-
-export interface CommanderTextMessage extends TextMessage {
-  arguments: Record<string, any>,
-  teamspeak: TeamSpeak,
-  reply: (msg: string) => Promise<any>
+export interface TranslationMessages {
+  COMMAND_NOT_FOUND: TranslationString
+  COMMAND_NO_PERMISSION: TranslationString
+  SUBCOMMAND_NOT_FOUND: TranslationString<{
+    error: Error
+    cmd: BaseCommand
+  }>
 }
 
 export interface CommanderOptions {
-  prefix: string,
+  prefix: string
+  messages: TranslationMessages
 }
 
 export class Commander {
@@ -33,11 +37,17 @@ export class Commander {
   private commands: BaseCommand[] = []
 
   constructor(config: Partial<CommanderOptions> = {}) {
+    const { messages, ...rest } = config
     this.config = {
-      prefix: "!",
-      ...config
+      prefix: Commander.DEFAULT_PREFIX,
+      messages: {
+        COMMAND_NOT_FOUND: "no command found",
+        COMMAND_NO_PERMISSION: "no permission to use this command",
+        SUBCOMMAND_NOT_FOUND: ({ error, cmd }) => `${error.message}\nFor Command usage see ${this.defaultPrefix()}man ${cmd.getCommandName()}\n`,
+        ...messages
+      },
+      ...rest
     }
-    this.registerBaseCommands()
   }
 
   /** creates a new Throttle instance */
@@ -45,94 +55,63 @@ export class Commander {
     return new Throttle()
   }
 
-  private registerBaseCommands() {
-    this.registerHelp()
-    this.registerMan()
+  /*private registerBaseCommands() {
+    registerHelpCommand(this)
+    registerManualCommand(this)
+  }*/
+
+  private getTranslator(event: TextMessage, teamspeak: TeamSpeak): TranslationStringGetter {
+    return <T>(data: TranslationString<T>, args: T extends object ? T : never) => {
+      return this.getTranslatedString({
+        event,
+        teamspeak,
+        data,
+        ...args
+      })
+    }
   }
 
-  private registerHelp() {
-    this.createCommand("help")
-      .setHelp("Displays this text")
-      .setManual(`Displays a list of useable commands`)
-      .setManual(`you can search/filter for a specific commands by adding a keyword`)
-      .addArgument(arg => arg.rest.setName("filter").optional())
-      .run(async ev => {
-        const { filter } = ev.arguments
-        let cmds = this.getAvailableCommands()
-          .filter(cmd => !filter ||
-            cmd.getCommandName().match(new RegExp(filter, "i")) ||
-            cmd.getHelp().match(new RegExp(filter, "i")))
-        cmds = await this.checkPermissions(cmds, ev.invoker)
-        if (cmds.length === 0) return ev.reply("No Commands to display a help texts have been!")
-        const help: helpTexts[] = []
-        await Promise.all(cmds.map(async cmd => {
-          if (cmd instanceof CommandGroup) {
-            return (await cmd.getAvailableSubCommands(ev.invoker)).forEach(sub => {
-              help.push({ name: `${cmd.getFullCommandName()} ${sub.getCommandName()}`, help: sub.getHelp() })
-            })
-          } else {
-            help.push({ name: cmd.getFullCommandName(), help: cmd.getHelp()})
-          }
-        }))
-        ev.reply(`${help.length} Command${help.length === 1 ? "" : "s"} found:`)
-        return help.forEach(({ name, help }) => ev.reply(`[b]${name}[/b] ${help}`))
-      })
-  }
-  private registerMan() {  
-    this.createCommand("man")
-      .setHelp("Displays detailed help about a command if available")
-      .setManual(`Displays detailed usage help for a specific command`)
-      .setManual(`Arguments with Arrow Brackets (eg. < > ) are mandatory arguments`)
-      .setManual(`Arguments with Square Brackets (eg. [ ] ) are optional arguments`)
-      .addArgument(arg => arg.string.setName("command").minimum(1))
-      .addArgument(arg => arg.string.setName("subcommand").minimum(1).optional(false, false))
-      .run(async ev => {
-        const getManual = (cmd: BaseCommand) => {
-          if (cmd.hasManual()) return cmd.getManual()
-          if (cmd.hasHelp()) return cmd.getHelp()
-          return "No manual available"
-        }
-        const { command, subcommand } = ev.arguments
-        const commands = await this.checkPermissions(this.getAvailableCommands(command), ev.invoker)
-        if (commands.length === 0) return ev.reply(`No command with name [b]${command}[/b] found! Did you misstype the command?`)
-        commands.map(async cmd => {
-          if (cmd instanceof CommandGroup) {
-            if (subcommand) {
-              (await cmd.getAvailableSubCommands(ev.invoker, subcommand)).forEach(sub => {
-                ev.reply(`\n[b]Usage:[/b] ${cmd.getFullCommandName()} ${sub.getUsage()}\n${getManual(sub)}`)
-              })
-            } else {
-              ev.reply(`[b]${cmd.getFullCommandName()}[/b] ${getManual(cmd)}`)
-              ;(await cmd.getAvailableSubCommands(ev.invoker)).forEach(sub => {
-                ev.reply(`[b]${cmd.getFullCommandName()} ${sub.getUsage()}[/b] ${sub.getHelp()}`)
-              })
-            }
-          } else {
-            ev.reply(`\nManual for command: [b]${cmd.getFullCommandName()}[/b]\n[b]Usage:[/b] ${cmd.getUsage()}\n${getManual(cmd)}`)
-          }
-        })
-      })
+  /**
+   * retrieves a string from a CommanderString Type
+   * @param data the string getter data
+   */
+  private getTranslatedString({ teamspeak, event, data, ...rest }: {
+    teamspeak: TeamSpeak,
+    event: TextMessage,
+    data: TranslationString<any>
+  }) {
+    if (typeof data === "string") return data
+    return data({ client: event.invoker, teamspeak, ...rest })
   }
 
   private async textMessageHandler(event: CommanderTextMessage) {
     if (event.invoker.isQuery()) return
     if (!this.isPossibleCommand(event.msg)) return
+    const t = this.getTranslator(event, event.teamspeak)
     const match = event.msg.match(/^(?<command>\S*)\s*(?<args>.*)\s*/s)
     if (!match || !match.groups) return
     const { command, args } = match.groups
     let commands = this.getAvailableCommands(command)
-    if (commands.length === 0) return event.reply("no command found")
+    if (commands.length === 0)
+      return event.reply(t(this.config.messages.COMMAND_NOT_FOUND))
     commands = await this.checkPermissions(commands, event.invoker)
-    if (commands.length === 0) return event.reply("no permission to use this command")
-    commands.forEach(cmd => this.runCommand(cmd, args, event))
+    if (commands.length === 0)
+      return event.reply(t(this.config.messages.COMMAND_NO_PERMISSION))
+    commands.forEach(cmd => this.runCommand(cmd, args, event, t))
   }
 
-  private runCommand(cmd: BaseCommand, args: string, event: CommanderTextMessage) {
+  private runCommand(
+    cmd: BaseCommand,
+    args: string,
+    event: CommanderTextMessage,
+    translate: TranslationStringGetter
+  ) {
     try {
       cmd.handleRequest(args, event)
     } catch (e) {
       //Handle Command not found Exceptions for CommandGroups
       if (e instanceof CommandNotFoundError) {
+        translate(this.config.messages.SUBCOMMAND_NOT_FOUND, { error: e, cmd })
         event.reply(`${e.message}\nFor Command usage see ${this.defaultPrefix()}man ${cmd.getCommandName()}\n`)
       } else if (e instanceof PermissionError) {
         event.reply(`You do not have permissions to use this command!\nTo get a list of available commands see [b]${this.defaultPrefix()}help[/b]`)
@@ -161,6 +140,7 @@ export class Commander {
       case CLIENT: return (msg: string) => teamspeak.sendTextMessage(invoker.clid, CLIENT, msg)
       case CHANNEL: return (msg: string) => teamspeak.sendTextMessage(invoker.cid, CHANNEL, msg)
       case SERVER: return (msg: string) => teamspeak.sendTextMessage(0, SERVER, msg)
+      default: throw new Error(`unknown targetmode ${event.targetmode}`)
     }
   }
 
@@ -216,7 +196,7 @@ export class Commander {
       teamspeak.registerEvent("textchannel"),
       teamspeak.registerEvent("textprivate")
     ])
-    teamspeak.on("textmessage", (ev: TextMessage) => {
+    teamspeak.on("textmessage", ev => {
       this.textMessageHandler({
         ...ev,
         teamspeak,
@@ -230,4 +210,8 @@ export class Commander {
   static isValidCommandName(name: string) {
     return name.length > 0
   }
+}
+
+export namespace Commander {
+  export const DEFAULT_PREFIX = "!"
 }

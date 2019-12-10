@@ -1,4 +1,4 @@
-import { TeamSpeakClient } from "./types"
+import { TeamSpeakClient } from "ts3-nodejs-library/src/node/Client"
 
 export class Throttle {
   private throttled: Record<string, Throttle.ThrottleInterface> = {}

@@ -1,5 +1,6 @@
-import { Commander, CommanderTextMessage } from "../Commander"
-import { TeamSpeakClient } from "../util/types"
+import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { Commander } from "../Commander"
+import { CommanderTextMessage } from "../util/types"
 import { Argument } from "../arguments/Argument"
 import { ParseError } from "../exceptions/ParseError"
 import { TooManyArgumentsError } from "../exceptions/TooManyArgumentsError"

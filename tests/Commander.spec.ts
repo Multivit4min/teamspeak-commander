@@ -7,9 +7,9 @@ describe("Command", () => {
     commander = new Commander({ prefix: "!" })
   })
 
-  describe("defaultPrefix()", () => {
+  describe("prefix()", () => {
     it("should get the correct default prefix", () => {
-      expect(commander.defaultPrefix()).toBe("!")
+      expect(commander.prefix()).toBe("!")
     })
   })
 })

@@ -1,8 +1,9 @@
-import { TeamSpeakClient } from "../util/types"
+import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { Commander } from "../Commander"
+import { CommanderTextMessage } from "../util/types"
 import { CommandNotFoundError } from "../exceptions/CommandNotFoundError"
 import { Command } from "./Command"
 import { BaseCommand } from "./BaseCommand"
-import { Commander, CommanderTextMessage } from "../Commander"
 
 export class CommandGroup extends BaseCommand {
   private commands: Array<Command> = []

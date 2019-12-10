@@ -1,5 +1,6 @@
-import { TeamSpeakClient } from "../util/types"
-import { Commander, CommanderTextMessage } from "../Commander"
+import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { Commander } from "../Commander"
+import { CommanderTextMessage } from "../util/types"
 import { Throttle } from "../util/Throttle"
 import { ThrottleError } from "../exceptions/ThrottleError"
 

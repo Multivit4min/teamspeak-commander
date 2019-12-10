@@ -3,8 +3,8 @@ import {
   TranslationString,
   TranslationStringGetter
 } from "./util/types"
-import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library/src/TeamSpeak"
-import { TeamSpeakClient } from "ts3-nodejs-library/src/node/Client"
+import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library/lib/TeamSpeak"
+import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
 import { Command } from "./command/Command"
 import { CommandGroup } from "./command/CommandGroup"
 import { BaseCommand } from "./command/BaseCommand"
@@ -14,20 +14,24 @@ import { ParseError } from "./exceptions/ParseError"
 import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
 import { Throttle } from "./util/Throttle"
-import { TextMessage } from "ts3-nodejs-library/src/types/Events"
+import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
+
+export interface CommandErrorType<T extends Error> {
+  cmd: BaseCommand
+  error: T
+}
 
 export interface TranslationMessages {
   COMMAND_NOT_FOUND: TranslationString
   COMMAND_NO_PERMISSION: TranslationString
-  SUBCOMMAND_NOT_FOUND: TranslationString<{
-    error: Error
-    cmd: BaseCommand
-  }>
+  SUBCOMMAND_NOT_FOUND: TranslationString<CommandErrorType<CommandNotFoundError>>
+  COMMAND_PARSE_ERROR: TranslationString<CommandErrorType<ParseError>>
+  COMMAND_THROTTLE_ERROR: TranslationString<CommandErrorType<ThrottleError>>
+  COMMAND_TOO_MANY_ARGUMENTS_ERROR: TranslationString<CommandErrorType<TooManyArgumentsError>>
 }
 
-export interface CommanderOptions {
+export interface CommanderOptions extends TranslationMessages {
   prefix: string
-  messages: TranslationMessages
 }
 
 export class Commander {
@@ -37,28 +41,30 @@ export class Commander {
   private commands: BaseCommand[] = []
 
   constructor(config: Partial<CommanderOptions> = {}) {
-    const { messages, ...rest } = config
     this.config = {
       prefix: Commander.DEFAULT_PREFIX,
-      messages: {
-        COMMAND_NOT_FOUND: "no command found",
-        COMMAND_NO_PERMISSION: "no permission to use this command",
-        SUBCOMMAND_NOT_FOUND: ({ error, cmd }) => `${error.message}\nFor Command usage see ${this.defaultPrefix()}man ${cmd.getCommandName()}\n`,
-        ...messages
+      COMMAND_NOT_FOUND: "no command found",
+      COMMAND_NO_PERMISSION: ({ commander }) => `You do not have permissions to use this command!\nTo get a list of available commands see [b]${commander.prefix()}help[/b]`,
+      SUBCOMMAND_NOT_FOUND: ({ commander, error, cmd }) => `${error.message}\nFor Command usage see ${commander.prefix()}man ${cmd.getCommandName()}\n`,
+      COMMAND_PARSE_ERROR: ({ commander, cmd }) =>  `Invalid Command usage! For Command usage see [b]${commander.prefix()}man ${cmd.getCommandName()}[/b]\n`,
+      COMMAND_THROTTLE_ERROR: ({ error }) => error.message,
+      COMMAND_TOO_MANY_ARGUMENTS_ERROR: ({ commander, error, cmd }) => {
+        let response = `Too many Arguments received for this Command!\n`
+        if (error.parseError) {
+            response += `Argument parsed with an error [b]${error.parseError.argument.getManual()}[/b]\n`
+            response += `Returned with [b]${error.parseError.message}[/b]\n`
+        }
+        return response + `Invalid Command usage! For Command usage see [b]${commander.prefix()}man ${cmd.getCommandName()}[/b]`
       },
-      ...rest
+      ...config
     }
   }
+
 
   /** creates a new Throttle instance */
   static createThrottle() {
     return new Throttle()
   }
-
-  /*private registerBaseCommands() {
-    registerHelpCommand(this)
-    registerManualCommand(this)
-  }*/
 
   private getTranslator(event: TextMessage, teamspeak: TeamSpeak): TranslationStringGetter {
     return <T>(data: TranslationString<T>, args: T extends object ? T : never) => {
@@ -81,7 +87,7 @@ export class Commander {
     data: TranslationString<any>
   }) {
     if (typeof data === "string") return data
-    return data({ client: event.invoker, teamspeak, ...rest })
+    return data({ commander: this, client: event.invoker, teamspeak, ...rest })
   }
 
   private async textMessageHandler(event: CommanderTextMessage) {
@@ -93,10 +99,10 @@ export class Commander {
     const { command, args } = match.groups
     let commands = this.getAvailableCommands(command)
     if (commands.length === 0)
-      return event.reply(t(this.config.messages.COMMAND_NOT_FOUND))
+      return event.reply(t(this.config.COMMAND_NOT_FOUND))
     commands = await this.checkPermissions(commands, event.invoker)
     if (commands.length === 0)
-      return event.reply(t(this.config.messages.COMMAND_NO_PERMISSION))
+      return event.reply(t(this.config.COMMAND_NO_PERMISSION))
     commands.forEach(cmd => this.runCommand(cmd, args, event, t))
   }
 
@@ -109,24 +115,16 @@ export class Commander {
     try {
       cmd.handleRequest(args, event)
     } catch (e) {
-      //Handle Command not found Exceptions for CommandGroups
       if (e instanceof CommandNotFoundError) {
-        translate(this.config.messages.SUBCOMMAND_NOT_FOUND, { error: e, cmd })
-        event.reply(`${e.message}\nFor Command usage see ${this.defaultPrefix()}man ${cmd.getCommandName()}\n`)
+        event.reply(translate(this.config.SUBCOMMAND_NOT_FOUND, { error: e, cmd }))
       } else if (e instanceof PermissionError) {
-        event.reply(`You do not have permissions to use this command!\nTo get a list of available commands see [b]${this.defaultPrefix()}help[/b]`)
+        event.reply(translate(this.config.COMMAND_NO_PERMISSION, { error: e, cmd }))
       } else if (e instanceof ParseError) {
-        event.reply(`Invalid Command usage! For Command usage see [b]${this.defaultPrefix()}man ${cmd.getCommandName()}[/b]\n`)
+        event.reply(translate(this.config.COMMAND_PARSE_ERROR, { error: e, cmd }))
       } else if (e instanceof ThrottleError) {
-        event.reply(e.message)
+        event.reply(translate(this.config.COMMAND_THROTTLE_ERROR, { error: e, cmd }))
       } else if (e instanceof TooManyArgumentsError) {
-        let response = `Too many Arguments received for this Command!\n`
-        if (e.parseError) {
-            response += `Argument parsed with an error [b]${e.parseError.argument.getManual()}[/b]\n`
-            response += `Returned with [b]${e.parseError.message}[/b]\n`
-        }
-        response += `Invalid Command usage! For Command usage see [b]${this.defaultPrefix()}man ${cmd.getCommandName()}[/b]`
-        event.reply(response)
+        event.reply(translate(this.config.COMMAND_TOO_MANY_ARGUMENTS_ERROR, { error: e, cmd }))
       } else {
         throw e
       }
@@ -157,12 +155,12 @@ export class Commander {
       .filter(cmd => cmd.isEnabled())
   }
 
-  defaultPrefix() {
+  prefix() {
     return this.config.prefix
   }
 
   isPossibleCommand(text: string) {
-    if (text.startsWith(this.defaultPrefix())) return true
+    if (text.startsWith(this.prefix())) return true
     return this.commands.some(cmd => cmd.getFullCommandName() === text.split(" ")[0])
   }
 

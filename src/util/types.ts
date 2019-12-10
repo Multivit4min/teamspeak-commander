@@ -1,6 +1,7 @@
-import { TeamSpeakClient } from "ts3-nodejs-library/src/node/Client"
-import { TeamSpeak } from "ts3-nodejs-library/src/TeamSpeak"
-import { TextMessage } from "ts3-nodejs-library/src/types/Events"
+import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { TeamSpeak } from "ts3-nodejs-library/lib/TeamSpeak"
+import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
+import { Commander } from "Commander"
 
 /**
  * the commander text message event which extends the default teamspeak chat event
@@ -15,6 +16,7 @@ export interface CommanderTextMessage extends TextMessage {
  * the basic translation props every translation callback gets
  */
 export interface BaseTranslationProps {
+  commander: Commander
   client: TeamSpeakClient,
   teamspeak: TeamSpeak
 }

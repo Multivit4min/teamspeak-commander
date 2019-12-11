@@ -51,4 +51,4 @@ jobs:
         ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
         BASE_BRANCH: master
         BRANCH: gh-pages
-        FOLDER: docs
+        FOLDER: typedoc

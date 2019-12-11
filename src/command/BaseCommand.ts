@@ -5,7 +5,7 @@ import { Throttle } from "../util/Throttle"
 import { ThrottleError } from "../exceptions/ThrottleError"
 
 export type permissionHandler = (invoker: TeamSpeakClient) => Promise<boolean>|boolean
-export type runHandler = (event: CommanderTextMessage) => void
+export type runHandler = (event: CommanderTextMessage) => (Promise<void>|void)
 
 export abstract class BaseCommand {
   protected commander: Commander
@@ -26,7 +26,7 @@ export abstract class BaseCommand {
   abstract getUsage(): string
   abstract hasPermission(client: TeamSpeakClient): Promise<boolean>
   abstract validate(args: string): Record<string, any>
-  abstract handleRequest(args: string, ev: CommanderTextMessage): void
+  abstract async handleRequest(args: string, ev: CommanderTextMessage): Promise<void>
 
   /** checks if the command is enabled */
   isEnabled() {
@@ -160,8 +160,8 @@ export abstract class BaseCommand {
     return (await Promise.all(this.permissionHandler.map(cb => cb(client)))).every(result => result)
   }
 
-  protected dispatchCommand(ev: CommanderTextMessage) {
+  protected async dispatchCommand(ev: CommanderTextMessage) {
     this.handleThrottle(ev.invoker)
-    this.runHandler.forEach(handle => handle({...ev}))
+    await Promise.all(this.runHandler.map(handle => handle({...ev})))
   }
 }

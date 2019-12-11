@@ -5,6 +5,10 @@ import { CommandNotFoundError } from "../src/exceptions/CommandNotFoundError"
 import { ParseError } from "../src/exceptions/ParseError"
 import { ThrottleError } from "../src/exceptions/ThrottleError"
 import { TooManyArgumentsError } from "../src/exceptions/TooManyArgumentsError"
+import { BaseCommand } from "../src/command/BaseCommand"
+import { TranslationStringGetter } from "../src/util/types"
+import { PermissionError } from "../src/exceptions/PermissionError"
+import { TextMessageTargetMode } from "ts3-nodejs-library"
 const replyMock = jest.fn()
 
 describe("Command", () => {
@@ -106,6 +110,96 @@ describe("Command", () => {
     it("should find a custom prefix on a command", () => {
       commander.createCommand("foo").prefix("$")
       expect(commander.isPossibleCommand("$foo")).toBe(true)
+    })
+  })
+
+  describe("runCommand()", () => {
+    let cmd: BaseCommand
+    let translate: TranslationStringGetter
+    let teamspeak: any = {}
+    let handleRequestMock: jest.Mock
+
+    beforeEach(() => {
+      cmd = commander.createCommand("foo")
+      handleRequestMock = jest.fn()
+      cmd["handleRequest"] = handleRequestMock
+      translate = commander["getTranslator"](textEvent, teamspeak)
+    })
+
+    describe("error handling", () => {
+      it("should catch a CommandNotFoundError", async () => {
+        expect.assertions(1)
+        handleRequestMock.mockRejectedValue(new CommandNotFoundError("not found"))
+        await commander["runCommand"](cmd, "", textEvent, translate)
+        expect(replyMock).toBeCalledTimes(1)
+      })
+      it("should catch a PermissionError", async () => {
+        expect.assertions(1)
+        handleRequestMock.mockRejectedValue(new PermissionError("permission error"))
+        await commander["runCommand"](cmd, "", textEvent, translate)
+        expect(replyMock).toBeCalledTimes(1)
+      })
+      it("should catch a ParseError", async () => {
+        const argument: any = {}
+        expect.assertions(1)
+        handleRequestMock.mockRejectedValue(new ParseError("parse error", argument))
+        await commander["runCommand"](cmd, "", textEvent, translate)
+        expect(replyMock).toBeCalledTimes(1)
+      })
+      it("should catch a ThrottleError", async () => {
+        expect.assertions(1)
+        handleRequestMock.mockRejectedValue(new ThrottleError("throttle error"))
+        await commander["runCommand"](cmd, "", textEvent, translate)
+        expect(replyMock).toBeCalledTimes(1)
+      })
+      it("should catch a TooManyArgumentsError", async () => {
+        expect.assertions(1)
+        handleRequestMock.mockRejectedValue(new TooManyArgumentsError("too many arguments error"))
+        await commander["runCommand"](cmd, "", textEvent, translate)
+        expect(replyMock).toBeCalledTimes(1)
+      })
+      it("should throw a generic error", async () => {
+        expect.assertions(2)
+        const error = new Error("generic error")
+        handleRequestMock.mockRejectedValue(error)
+        await expect(commander["runCommand"](cmd, "", textEvent, translate)).rejects.toEqual(error)
+        expect(replyMock).toBeCalledTimes(0)
+      })
+    })
+  })
+
+  describe("getReplyOutput()", () => {
+    let sendTextMessageMock: jest.Mock
+    const teamspeak: any = {
+    }
+
+    beforeEach(() => {
+      sendTextMessageMock = jest.fn()
+      teamspeak.sendTextMessage = sendTextMessageMock
+    })
+
+    it("should retrieve the correct function to reply to a client", async () => {
+      expect.assertions(2)
+      textEvent.targetmode = TextMessageTargetMode.CLIENT
+      await Commander.getReplyFunction(textEvent, teamspeak)("foo")
+      expect(sendTextMessageMock).toHaveBeenCalledTimes(1)
+      expect(sendTextMessageMock).toBeCalledWith(1337, TextMessageTargetMode.CLIENT, "foo")
+    })
+
+    it("should retrieve the correct function to reply to a channel", async () => {
+      expect.assertions(2)
+      textEvent.targetmode = TextMessageTargetMode.CHANNEL
+      await Commander.getReplyFunction(textEvent, teamspeak)("foo")
+      expect(sendTextMessageMock).toHaveBeenCalledTimes(1)
+      expect(sendTextMessageMock).toBeCalledWith(1338, TextMessageTargetMode.CHANNEL, "foo")
+    })
+
+    it("should retrieve the correct function to reply to a server", async () => {
+      expect.assertions(2)
+      textEvent.targetmode = TextMessageTargetMode.SERVER
+      await Commander.getReplyFunction(textEvent, teamspeak)("foo")
+      expect(sendTextMessageMock).toHaveBeenCalledTimes(1)
+      expect(sendTextMessageMock).toBeCalledWith(0, TextMessageTargetMode.SERVER, "foo")
     })
   })
 

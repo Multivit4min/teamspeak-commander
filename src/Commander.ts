@@ -101,14 +101,14 @@ export class Commander {
     commands.forEach(cmd => this.runCommand(cmd, args, event, t))
   }
 
-  private runCommand(
+  private async runCommand(
     cmd: BaseCommand,
     args: string,
     event: CommanderTextMessage,
     translate: TranslationStringGetter
   ) {
     try {
-      cmd.handleRequest(args, event)
+      await cmd.handleRequest(args, event)
     } catch (error) {
       if (error instanceof CommandNotFoundError) {
         event.reply(translate(this.config.SUBCOMMAND_NOT_FOUND, { error, cmd }))

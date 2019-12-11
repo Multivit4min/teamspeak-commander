@@ -26,29 +26,29 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.github_token }}
-    #- name: Generate Docs
-    #  run: |
-    #    npm run generate-docs
+    - name: Generate Docs
+      run: |
+        npm run generate-docs
 
-  #deploy:
-  #  runs-on: ubuntu-latest
-  #  strategy:
-  #    matrix:
-  #      node-version: [12]
-  #  needs: tests
-  #  if: github.ref == 'refs/heads/master'
-  #  steps:
-  #  - uses: actions/checkout@v1
-  #  - name: install dependencies
-  #    run: |
-  #      npm ci
-  #  - name: Generate Docs
-  #    run: |
-  #      npm run generate-docs
-  #  - name: Deploy on Github Pages
-  #    uses: JamesIves/github-pages-deploy-action@master
-  #    env:
-  #      ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
-  #      BASE_BRANCH: master
-  #      BRANCH: gh-pages
-  #      FOLDER: docs
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12]
+    needs: tests
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/checkout@v1
+    - name: install dependencies
+      run: |
+        npm ci
+    - name: Generate Docs
+      run: |
+        npm run generate-docs
+    - name: Deploy on Github Pages
+      uses: JamesIves/github-pages-deploy-action@master
+      env:
+        ACCESS_TOKEN: ${{secrets.ACCESS_TOKEN}}
+        BASE_BRANCH: master
+        BRANCH: gh-pages
+        FOLDER: docs

@@ -2,6 +2,7 @@ TeamSpeak Command Interface for TS3-NodeJS-Library
 ===
 
 [![Build Status](https://github.com/multivit4min/teamspeak-commander/workflows/Node%20CI/badge.svg)](https://travis-ci.com/Multivit4min/teamspeak-commander)
+[![Coverage Status](https://coveralls.io/repos/github/Multivit4min/teamspeak-commander/badge.svg?branch=master)](https://coveralls.io/github/Multivit4min/teamspeak-commander?branch=master)
 [![Discord](https://img.shields.io/discord/653273459840778270)](https://discord.gg/Z5rdcGu)
 
 ## This is still work in progress

@@ -11,15 +11,15 @@ export abstract class BaseCommand {
   protected commander: Commander
   protected permissionHandler: permissionHandler[] = []
   protected runHandler: runHandler[] = []
-  private prefix: string = ""
-  private help: string = ""
-  private manual: string[] = []
-  private name: string
-  private enabled: boolean = true
-  private throttle: Throttle
+  private cmdPrefix: string = ""
+  private cmdHelp: string = ""
+  private cmdManual: string[] = []
+  private cmdName: string
+  private cmdEnabled: boolean = true
+  private cmdThrottle: Throttle
 
   constructor(cmd: string, commander: Commander) {
-    this.name = cmd
+    this.cmdName = cmd
     this.commander = commander
   }
 
@@ -30,21 +30,24 @@ export abstract class BaseCommand {
 
   /** checks if the command is enabled */
   isEnabled() {
-    return this.enabled
+    return this.cmdEnabled
   }
 
-  /**
-   * enables or disables a command
-   * @param status wether the command should be enabled or disabled
-   */
-  enable(status: boolean) {
-    this.enabled = status
+  /* enables this command */
+  enable() {
+    this.cmdEnabled = true
+    return this
+  }
+
+  /* disabled this command */
+  disable() {
+    this.cmdEnabled = false
     return this
   }
 
   /** gets the command name without its prefix */
   getCommandName() {
-    return this.name
+    return this.cmdName
   }
 
   /** gets the command name with its prefix */
@@ -54,31 +57,31 @@ export abstract class BaseCommand {
 
   /** retrieves the help text */
   getHelp() {
-    return this.help
+    return this.cmdHelp
   }
 
   /**
    * sets a help text (should be a very brief description)
    * @param text help text
    */
-  setHelp(text: string) {
-    this.help = text
+  help(text: string) {
+    this.cmdHelp = text
     return this
   }
 
   /** returns a boolean wether a help text has been set or not */
   hasHelp() {
-    return this.help !== ""
+    return this.cmdHelp !== ""
   }
 
   /** retrieves the current manual text */
   getManual() {
-    return this.manual.join("\r\n")
+    return this.cmdManual.join("\r\n")
   }
 
   /** returns a boolean wether a help text has been set or not */
   hasManual() {
-    return this.manual.length > 0
+    return this.cmdManual.length > 0
   }
 
   /**
@@ -87,14 +90,14 @@ export abstract class BaseCommand {
    * by default the prefix gets inherited from its Commander
    * @param prefix the new prefix for this command
    */
-  setPrefix(prefix: string) {
-    this.prefix = prefix
+  prefix(prefix: string) {
+    this.cmdPrefix = prefix
     return this
   }
 
   /** gets the current prefix for this command */
   getPrefix() {
-    if (this.prefix.length > 0) return this.prefix
+    if (this.cmdPrefix.length > 0) return this.cmdPrefix
     return this.commander.config.prefix 
   }
 
@@ -103,8 +106,8 @@ export abstract class BaseCommand {
    * in order to create a multilined manual text
    * @param text the manual text
    */
-  setManual(text: string) {
-    this.manual.push(text)
+  manual(text: string) {
+    this.cmdManual.push(text)
     return this
   }
 
@@ -112,7 +115,7 @@ export abstract class BaseCommand {
    * clears the current manual text
    */
   clearManual() {
-    this.manual = []
+    this.cmdManual = []
     return this
   }
 
@@ -130,17 +133,17 @@ export abstract class BaseCommand {
    * @param throttle adds the throttle instance
    */
   addThrottle(throttle: Throttle) {
-    this.throttle = throttle
+    this.cmdThrottle = throttle
     return this
   }
 
   private handleThrottle(client: TeamSpeakClient) {
-    if (!(this.throttle instanceof Throttle)) return
-    if (this.throttle.isThrottled(client)) {
-      const time = (this.throttle.timeTillNextCommand(client) / 1000).toFixed(1)
+    if (!(this.cmdThrottle instanceof Throttle)) return
+    if (this.cmdThrottle.isThrottled(client)) {
+      const time = (this.cmdThrottle.timeTillNextCommand(client) / 1000).toFixed(1)
       throw new ThrottleError(`You can use this command again in ${time} seconds!`)
     } else {
-      this.throttle.throttle(client)
+      this.cmdThrottle.throttle(client)
     }
   }
 

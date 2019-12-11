@@ -16,7 +16,7 @@ describe("Command", () => {
     })
   
     it("should test with a custom prefix", () => {
-      command.setPrefix("$")
+      command.prefix("$")
       expect(command.getPrefix()).toBe("$")
     })
   })
@@ -27,7 +27,7 @@ describe("Command", () => {
     })
   
     it("should test a custom help text", () => {
-      command.setHelp("foobar")
+      command.help("foobar")
       expect(command.getHelp()).toBe("foobar")
     })
   })
@@ -38,17 +38,17 @@ describe("Command", () => {
     })
   
     it("should test a single line manual text", () => {
-      command.setManual("foo")
+      command.manual("foo")
       expect(command.getManual()).toBe("foo")
     })
   
     it("should test a multiline line manual text", () => {
-      command.setManual("foo").setManual("bar")
+      command.manual("foo").manual("bar")
       expect(command.getManual()).toBe("foo\r\nbar")
     })
   
     it("should clear a manual", () => {
-      command.setManual("foo").setManual("bar").clearManual()
+      command.manual("foo").manual("bar").clearManual()
       expect(command.getManual()).toBe("")
     })
   })
@@ -59,13 +59,12 @@ describe("Command", () => {
     })
   
     it("should test disabling a command", () => {
-      command.enable(false)
+      command.disable()
       expect(command.isEnabled()).toBe(false)
     })
   
     it("should test reenabling a command", () => {
-      command.enable(false)
-      command.enable(true)
+      command.disable().enable()
       expect(command.isEnabled()).toBe(true)
     })
   })
@@ -76,7 +75,7 @@ describe("Command", () => {
     })
   
     it("should test with a custom prefix", () => {
-      command.setPrefix("$")
+      command.prefix("$")
       expect(command.getFullCommandName()).toBe("$test")
     })
   })

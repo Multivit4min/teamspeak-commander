@@ -49,7 +49,7 @@ describe("Integration", () => {
     return new Promise(fulfill => {
       commander
         .createCommand("test")
-        .addArgument((arg: ArgType) => arg.string.setName("param"))
+        .addArgument((arg: ArgType) => arg.string.name("param"))
         .run(runCallback)
 
       commander["textMessageHandler"]({ ...dummyEvent, msg: "!test 123" })
@@ -69,7 +69,7 @@ describe("Integration", () => {
     return new Promise(fulfill => {
       commander
         .createCommand("test")
-        .addArgument((arg: ArgType) => arg.number.setName("param"))
+        .addArgument((arg: ArgType) => arg.number.name("param"))
         .run(runCallback)
 
       commander["textMessageHandler"]({ ...dummyEvent, msg: "!test 123" })
@@ -90,7 +90,7 @@ describe("Integration", () => {
       return new Promise(fulfill => {
         commander
           .createCommand("test")
-          .addArgument((arg: ArgType) => arg.client.setName("param"))
+          .addArgument((arg: ArgType) => arg.client.name("param"))
           .run(runCallback)
   
         commander["textMessageHandler"]({ ...dummyEvent, msg: "!test NF61yPIiDvYuOJ/Bbeod84bw6dE=" })
@@ -112,7 +112,7 @@ describe("Integration", () => {
 
         commander
           .createCommand("test")
-          .addArgument((arg: ArgType) => arg.client.setName("param"))
+          .addArgument((arg: ArgType) => arg.client.name("param"))
           .run(runCallback)
   
         commander["textMessageHandler"]({ ...event,  msg })
@@ -135,7 +135,7 @@ describe("Integration", () => {
         commander
           .createCommandGroup("foo")
           .addCommand("bar")
-          .addArgument(arg => arg.rest.setName("param"))
+          .addArgument(arg => arg.rest.name("param"))
           .run(runCallback)
   
         commander["textMessageHandler"]({ ...dummyEvent, msg: "!foo bar asdf" })
@@ -155,10 +155,10 @@ describe("Integration", () => {
       return new Promise(fulfill => {
         const group = commander.createCommandGroup("foo")
         group.addCommand("bar")
-          .addArgument(arg => arg.rest.setName("param"))
+          .addArgument(arg => arg.rest.name("param"))
           .run(runCallback)
         group.addCommand("baz")
-          .addArgument(arg => arg.rest.setName("param"))
+          .addArgument(arg => arg.rest.name("param"))
           .run(runCallback)
   
         commander["textMessageHandler"]({ ...dummyEvent, msg: "!foo baz asdf" })

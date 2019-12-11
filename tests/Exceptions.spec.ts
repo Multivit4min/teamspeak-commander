@@ -12,7 +12,7 @@ describe("Exceptions", () => {
 
   describe("ParseError", () => {
     it("should test parameters of the error", () => {
-      const arg = new StringArgument().setName("foo")
+      const arg = new StringArgument().name("foo")
       const error = new ParseError("something bad happened", arg)
       expect(error.argument).toEqual(arg)
     })
@@ -48,7 +48,7 @@ describe("Exceptions", () => {
 
   describe("TooManyArgumentsError", () => {
     it("should test parameters of the error", () => {
-      const arg = new StringArgument().setName("foo")
+      const arg = new StringArgument().name("foo")
       const parseError = new ParseError("something bad happened", arg)
       const error = new TooManyArgumentsError("foobar", parseError)
       expect(error.parseError).toEqual(parseError)

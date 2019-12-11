@@ -16,23 +16,23 @@ describe("Argument", () => {
   })
 
   it("should validate #getName()", () => {
-    arg.setName("foobar")
+    arg.name("foobar")
     expect(arg.getName()).toBe("foobar")
   })
 
   describe("getManual()", () => {
     it("should validate #getManual() on an optional argument without display parameter", () => {
-      arg.setName("foobar").optional(false)
+      arg.name("foobar").optional(false)
       expect(arg.getManual()).toBe("[foobar=false]")
     })
   
     it("should validate #getManual() on an optional argument with display parameter", () => {
-      arg.setName("foobar", "foo").optional(false, false)
+      arg.name("foobar", "foo").optional(false, false)
       expect(arg.getManual()).toBe("[foo]")
     })
   
     it("should validate #getManual() on an optional argument with display parameter", () => {
-      arg.setName("foobar")
+      arg.name("foobar")
       expect(arg.getManual()).toBe("<foobar>")
     })
   })

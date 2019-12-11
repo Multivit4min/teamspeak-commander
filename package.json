@@ -1,9 +1,8 @@
 {
   "name": "teamspeak-commander",
-  "version": "1.0.0",
-  "description": "TeamSpeak Server Query API",
+  "version": "0.1.0",
+  "description": "TeamSpeak Command Library",
   "main": "lib/Commander.js",
-  "types": "./lib/Commander.d.ts",
   "homepage": "https://github.com/Multivit4min/TS3-NodeJS-Library",
   "repository": {
     "type": "git",
@@ -42,8 +41,5 @@
     "ts3-nodejs-library": "^2.3.0",
     "typedoc": "^0.15.4",
     "typescript": "^3.7.3"
-  },
-  "dependencies": {
-    "i18next": "^19.0.1"
   }
 }

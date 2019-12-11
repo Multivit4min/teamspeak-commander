@@ -1,18 +1,10 @@
 import { Commander } from "../src/Commander"
 import { CommanderTextMessage } from "../src/util/types"
-import { TextMessageTargetMode } from "ts3-nodejs-library"
+import { textmessageEvent } from "./mocks/textmessageEvent"
 import { ArgType } from "../src/arguments/ArgumentCreator"
 const runCallback = jest.fn()
 const replyCallback = jest.fn()
 
-const event: CommanderTextMessage = {
-  invoker: <any>{ nick: "foo", isQuery: () => false },
-  msg: "!test 123",
-  targetmode: TextMessageTargetMode.CHANNEL,
-  reply: replyCallback,
-  teamspeak: <any>{},
-  arguments: {}
-}
 
 describe("Integration", () => {
   let commander: Commander
@@ -20,7 +12,7 @@ describe("Integration", () => {
 
   beforeEach(() => {
     commander = new Commander({ prefix: "!" })
-    dummyEvent = { ...event }
+    dummyEvent = textmessageEvent(replyCallback)
     runCallback.mockClear()
     replyCallback.mockClear()
     replyCallback.mockResolvedValue(null)
@@ -115,7 +107,7 @@ describe("Integration", () => {
           .addArgument((arg: ArgType) => arg.client.name("param"))
           .run(runCallback)
   
-        commander["textMessageHandler"]({ ...event,  msg })
+        commander["textMessageHandler"]({ ...dummyEvent,  msg })
 
         setImmediate(() => {
           expect(replyCallback).toBeCalledTimes(0)

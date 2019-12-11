@@ -23,7 +23,7 @@ export interface CommandErrorType<T extends Error> {
 
 export interface TranslationMessages {
   COMMAND_NOT_FOUND: TranslationString
-  COMMAND_NO_PERMISSION: TranslationString
+  COMMAND_NO_PERMISSION: TranslationString<CommandErrorType<PermissionError>>
   SUBCOMMAND_NOT_FOUND: TranslationString<CommandErrorType<CommandNotFoundError>>
   COMMAND_PARSE_ERROR: TranslationString<CommandErrorType<ParseError>>
   COMMAND_THROTTLE_ERROR: TranslationString<CommandErrorType<ThrottleError>>
@@ -68,12 +68,7 @@ export class Commander {
 
   private getTranslator(event: TextMessage, teamspeak: TeamSpeak): TranslationStringGetter {
     return <T>(data: TranslationString<T>, args: T extends object ? T : never) => {
-      return this.getTranslatedString({
-        event,
-        teamspeak,
-        data,
-        ...args
-      })
+      return this.getTranslatedString({ event, teamspeak, data, ...args })
     }
   }
 
@@ -114,19 +109,19 @@ export class Commander {
   ) {
     try {
       cmd.handleRequest(args, event)
-    } catch (e) {
-      if (e instanceof CommandNotFoundError) {
-        event.reply(translate(this.config.SUBCOMMAND_NOT_FOUND, { error: e, cmd }))
-      } else if (e instanceof PermissionError) {
-        event.reply(translate(this.config.COMMAND_NO_PERMISSION, { error: e, cmd }))
-      } else if (e instanceof ParseError) {
-        event.reply(translate(this.config.COMMAND_PARSE_ERROR, { error: e, cmd }))
-      } else if (e instanceof ThrottleError) {
-        event.reply(translate(this.config.COMMAND_THROTTLE_ERROR, { error: e, cmd }))
-      } else if (e instanceof TooManyArgumentsError) {
-        event.reply(translate(this.config.COMMAND_TOO_MANY_ARGUMENTS_ERROR, { error: e, cmd }))
+    } catch (error) {
+      if (error instanceof CommandNotFoundError) {
+        event.reply(translate(this.config.SUBCOMMAND_NOT_FOUND, { error, cmd }))
+      } else if (error instanceof PermissionError) {
+        event.reply(translate(this.config.COMMAND_NO_PERMISSION, { error, cmd }))
+      } else if (error instanceof ParseError) {
+        event.reply(translate(this.config.COMMAND_PARSE_ERROR, { error, cmd }))
+      } else if (error instanceof ThrottleError) {
+        event.reply(translate(this.config.COMMAND_THROTTLE_ERROR, { error, cmd }))
+      } else if (error instanceof TooManyArgumentsError) {
+        event.reply(translate(this.config.COMMAND_TOO_MANY_ARGUMENTS_ERROR, { error, cmd }))
       } else {
-        throw e
+        throw error
       }
     }
   }
@@ -186,14 +181,20 @@ export class Commander {
     return cmd
   }
 
-  /** adds a teamspeak instance to the command handler */
-  async addInstance(teamspeak: TeamSpeak) {
+  /**
+   * adds a teamspeak instance to the command handler
+   * @param teamspeak the instance to add
+   * @param registerEvents depending on this setting the registerEvent command will be sent to the teamspeak server
+   */
+  async addInstance(teamspeak: TeamSpeak, registerEvents: boolean = true) {
     this.instances.push(teamspeak)
-    await Promise.all([
-      teamspeak.registerEvent("textserver"),
-      teamspeak.registerEvent("textchannel"),
-      teamspeak.registerEvent("textprivate")
-    ])
+    if (registerEvents) {
+      await Promise.all([
+        teamspeak.registerEvent("textserver"),
+        teamspeak.registerEvent("textchannel"),
+        teamspeak.registerEvent("textprivate")
+      ])
+    }
     teamspeak.on("textmessage", ev => {
       this.textMessageHandler({
         ...ev,
@@ -205,8 +206,12 @@ export class Commander {
     return this
   }
 
+  /**
+   * checks if the command name is valid to be created as a command
+   * @param name the command to create
+   */
   static isValidCommandName(name: string) {
-    return name.length > 0
+    return name.length > 0 && !(/^\S$/).test(name)
   }
 }
 

@@ -6,13 +6,27 @@ TeamSpeak Command Interface for TS3-NodeJS-Library
 [![npm](https://img.shields.io/npm/v/teamspeak-commander.svg)](https://www.npmjs.com/package/teamspeak-commander)
 [![Discord](https://img.shields.io/discord/653273459840778270)](https://discord.gg/Z5rdcGu)
 
-## This is still work in progress
+## **This is still work in progress API may change without notice**
+
+# Introduction
+
+This library allows you to easily create commands for your teamspeak server using `ts3-nodejs-library`
+
+## Install
+
+`npm install --save teamspeak-commander`
+
+
+# Documentation
+
+You can find all necessary documentation [here](https://multivit4min.github.io/teamspeak-commander) or a lot of examples in the **docs** folder of this project!
+
 
 Usage:
 
 ```javascript
 const { TeamSpeak } = require("ts3-nodejs-library")
-const { Commander } = require("./src/Commander")
+const { Commander } = require("teamspeak-commander")
 
 const commander = new Commander({ prefix: "!" })
 

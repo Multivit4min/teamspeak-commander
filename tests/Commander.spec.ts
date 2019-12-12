@@ -31,21 +31,21 @@ describe("Command", () => {
   describe("getTranslator()", () => {
     it("it should check the parsed string of COMMAND_NOT_FOUND", () => {
       const teamspeak: any = {}
-      const translator = commander["getTranslator"](textEvent, teamspeak)
+      const translator = commander["getTranslator"](textEvent)
       expect(translator(commander.config.COMMAND_NOT_FOUND))
         .toBe("no command found")
     })
 
     it("it should check the parsed string of COMMAND_NO_PERMISSION", () => {
       const teamspeak: any = {}
-      const translator = commander["getTranslator"](textEvent, teamspeak)
+      const translator = commander["getTranslator"](textEvent)
       expect(translator(commander.config.COMMAND_NO_PERMISSION))
         .toBe(`You do not have permissions to use this command!\nTo get a list of available commands see [b]${commander.prefix()}help[/b]`)
     })
 
     it("it should check the parsed string of SUBCOMMAND_NOT_FOUND", () => {
       const teamspeak: any = {}
-      const translator = commander["getTranslator"](textEvent, teamspeak)
+      const translator = commander["getTranslator"](textEvent)
       const props = {
         commander,
         error: new CommandNotFoundError("not found"),
@@ -58,7 +58,7 @@ describe("Command", () => {
     it("it should check the parsed string of COMMAND_PARSE_ERROR", () => {
       const teamspeak: any = {}
       const argument: any = {}
-      const translator = commander["getTranslator"](textEvent, teamspeak)
+      const translator = commander["getTranslator"](textEvent)
       const props = {
         commander,
         error: new ParseError("parse error", argument),
@@ -70,7 +70,7 @@ describe("Command", () => {
 
     it("it should check the parsed string of COMMAND_THROTTLE_ERROR", () => {
       const teamspeak: any = {}
-      const translator = commander["getTranslator"](textEvent, teamspeak)
+      const translator = commander["getTranslator"](textEvent)
       const props = {
         commander,
         error: new ThrottleError("throttle error"),
@@ -82,7 +82,7 @@ describe("Command", () => {
 
     it("it should check the parsed string of COMMAND_TOO_MANY_ARGUMENTS_ERROR", () => {
       const teamspeak: any = {}
-      const translator = commander["getTranslator"](textEvent, teamspeak)
+      const translator = commander["getTranslator"](textEvent)
       const props = {
         commander,
         error: new TooManyArgumentsError("throttle error"),
@@ -123,7 +123,7 @@ describe("Command", () => {
       cmd = commander.createCommand("foo")
       handleRequestMock = jest.fn()
       cmd["handleRequest"] = handleRequestMock
-      translate = commander["getTranslator"](textEvent, teamspeak)
+      translate = commander["getTranslator"](textEvent)
     })
 
     describe("error handling", () => {

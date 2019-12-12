@@ -66,9 +66,9 @@ export class Commander {
     return new Throttle()
   }
 
-  private getTranslator(event: TextMessage, teamspeak: TeamSpeak): TranslationStringGetter {
+  private getTranslator(event: TextMessage): TranslationStringGetter {
     return <T>(data: TranslationString<T>, args: T extends object ? T : never) => {
-      return this.getTranslatedString({ event, teamspeak, data, ...args })
+      return this.getTranslatedString({ client: event.invoker, data, ...args })
     }
   }
 
@@ -76,19 +76,33 @@ export class Commander {
    * retrieves a string from a CommanderString Type
    * @param data the string getter data
    */
-  private getTranslatedString({ teamspeak, event, data, ...rest }: {
-    teamspeak: TeamSpeak,
-    event: TextMessage,
+  private getTranslatedString({ client, data, ...rest }: {
+    client: TeamSpeakClient,
     data: TranslationString<any>
   }) {
     if (typeof data === "string") return data
-    return data({ commander: this, client: event.invoker, teamspeak, ...rest })
+    return data({
+      commander: this,
+      client,
+      teamspeak: client.getParent(),
+      ...rest
+    })
+  }
+
+  /**
+   * gets a string translation with the client object
+   * @param client 
+   */
+  translateString(client: TeamSpeakClient) {
+    return (data: TranslationString<any>) => {
+      return this.getTranslatedString({ client, data })
+    }
   }
 
   private async textMessageHandler(event: CommanderTextMessage) {
     if (event.invoker.isQuery()) return
     if (!this.isPossibleCommand(event.msg)) return
-    const t = this.getTranslator(event, event.teamspeak)
+    const t = this.getTranslator(event)
     const match = event.msg.match(/^(?<command>\S*)\s*(?<args>.*)\s*/s)
     if (!match || !match.groups) return
     const { command, args } = match.groups
@@ -144,10 +158,41 @@ export class Commander {
       .filter(res => res instanceof BaseCommand)
   }
 
+  /**
+   * gets a list of enabled commands
+   * @param name the name to find
+   */
   getAvailableCommands(name?: string) {
     return this.commands
-      .filter(cmd => !name || cmd.getCommandName() === name || cmd.getFullCommandName() === name)
       .filter(cmd => cmd.isEnabled())
+      .filter(cmd => !name || cmd.getCommandName() === name || cmd.getFullCommandName() === name)
+  }
+
+  /**
+   * regex searches available commands
+   * @param name the name to find 
+   * @param client the requesting client 
+   */
+  searchAvailableCommands(name: string, client: TeamSpeakClient) {
+    return this.commands
+      .filter(cmd => cmd.isEnabled())
+      .filter(cmd => {
+        const regex = new RegExp(name, "i")
+        return (
+          regex.test(cmd.getFullCommandName()) ||
+          regex.test(cmd.getHelp(client))
+        )
+      })
+  }
+
+  /**
+   * gets a list of availale commands with permission checks
+   * @param client the client to check permissions for
+   * @param filter the name to prefilter commands
+   */
+  getAvailableCommandsWithPermission(client: TeamSpeakClient, filter?: string) {
+    const cmds = filter ? this.searchAvailableCommands(filter, client) : this.commands
+    return this.checkPermissions(cmds, client)
   }
 
   prefix() {
@@ -200,7 +245,7 @@ export class Commander {
         ...ev,
         teamspeak,
         reply: Commander.getReplyFunction(ev, teamspeak),
-        arguments: {}
+        args: {}
       })
     })
     return this

@@ -25,8 +25,8 @@ commander.createCommand("ping")
 //command !roll 10 -> rolls a number between 1 and 10
 //command !roll -> rolls a number between 1 and 6
 commander.createCommand("roll")
-  .setHelp("rolls a number")
-  .addArgument(arg => arg.number.setName("max").optional(6))
+  .help("rolls a number")
+  .addArgument(arg => arg.number.name("max").optional(6))
   .run(event => {
     const random = Math.floor(Math.random() * event.arguments.max) + 1
     event.reply(`Rolled a ${random} (from 1-${event.arguments.max})`)

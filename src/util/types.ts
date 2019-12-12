@@ -7,7 +7,7 @@ import { Commander } from "Commander"
  * the commander text message event which extends the default teamspeak chat event
  */
 export interface CommanderTextMessage extends TextMessage {
-  arguments: Record<string, any>
+  args: Record<string, any>
   teamspeak: TeamSpeak
   reply: (msg: string) => Promise<any>
 }

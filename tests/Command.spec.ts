@@ -1,13 +1,16 @@
 import { Command } from "../src/command/Command"
 import { Commander } from "../src/Commander"
+import { textmessageEvent } from "./mocks/textmessageEvent"
 
 describe("Command", () => {
   let command: Command
   let commander: Commander
+  let textEvent: ReturnType<typeof textmessageEvent>
 
   beforeEach(() => {
     commander = new Commander({ prefix: "!" })
     command = new Command("test", commander)
+    textEvent = textmessageEvent(jest.fn())
   })
 
   describe("getPrefix()", () => {
@@ -23,33 +26,33 @@ describe("Command", () => {
 
   describe("getHelp()", () => {
     it("should test an empty help text", () => {
-      expect(command.getHelp()).toBe("")
+      expect(command.getHelp(textEvent.invoker)).toBe("")
     })
   
     it("should test a custom help text", () => {
       command.help("foobar")
-      expect(command.getHelp()).toBe("foobar")
+      expect(command.getHelp(textEvent.invoker)).toBe("foobar")
     })
   })
 
   describe("getManual()", () => {
     it("should test an empty manual text", () => {
-      expect(command.getManual()).toBe("")
+      expect(command.getManual(textEvent.invoker)).toBe("")
     })
   
     it("should test a single line manual text", () => {
       command.manual("foo")
-      expect(command.getManual()).toBe("foo")
+      expect(command.getManual(textEvent.invoker)).toBe("foo")
     })
   
     it("should test a multiline line manual text", () => {
       command.manual("foo").manual("bar")
-      expect(command.getManual()).toBe("foo\r\nbar")
+      expect(command.getManual(textEvent.invoker)).toBe("foo\r\nbar")
     })
   
     it("should clear a manual", () => {
       command.manual("foo").manual("bar").clearManual()
-      expect(command.getManual()).toBe("")
+      expect(command.getManual(textEvent.invoker)).toBe("")
     })
   })
 

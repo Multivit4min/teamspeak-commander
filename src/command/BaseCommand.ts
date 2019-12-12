@@ -1,6 +1,6 @@
 import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
 import { Commander } from "../Commander"
-import { CommanderTextMessage } from "../util/types"
+import { CommanderTextMessage, TranslationString } from "../util/types"
 import { Throttle } from "../util/Throttle"
 import { ThrottleError } from "../exceptions/ThrottleError"
 
@@ -12,9 +12,9 @@ export abstract class BaseCommand {
   protected permissionHandler: permissionHandler[] = []
   protected runHandler: runHandler[] = []
   private cmdPrefix: string = ""
-  private cmdHelp: string = ""
-  private cmdManual: string[] = []
-  private cmdName: string
+  private cmdHelp: TranslationString = ""
+  private cmdManual: TranslationString[] = []
+  private cmdName: TranslationString
   private cmdEnabled: boolean = true
   private cmdThrottle: Throttle
 
@@ -56,15 +56,15 @@ export abstract class BaseCommand {
   }
 
   /** retrieves the help text */
-  getHelp() {
-    return this.cmdHelp
+  getHelp(client: TeamSpeakClient) {
+    return this.commander.translateString(client)(this.cmdHelp)
   }
 
   /**
    * sets a help text (should be a very brief description)
    * @param text help text
    */
-  help(text: string) {
+  help(text: TranslationString) {
     this.cmdHelp = text
     return this
   }
@@ -75,8 +75,10 @@ export abstract class BaseCommand {
   }
 
   /** retrieves the current manual text */
-  getManual() {
-    return this.cmdManual.join("\r\n")
+  getManual(client: TeamSpeakClient) {
+    return this.cmdManual
+      .map(man => this.commander.translateString(client)(man))
+      .join("\r\n")
   }
 
   /** returns a boolean wether a help text has been set or not */
@@ -106,7 +108,7 @@ export abstract class BaseCommand {
    * in order to create a multilined manual text
    * @param text the manual text
    */
-  manual(text: string) {
+  manual(text: TranslationString) {
     this.cmdManual.push(text)
     return this
   }

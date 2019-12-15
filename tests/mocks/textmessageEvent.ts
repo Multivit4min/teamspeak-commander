@@ -1,6 +1,5 @@
 import { CommanderTextMessage } from "../../src/util/types"
-import { TextMessageTargetMode } from "ts3-nodejs-library"
-import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { TeamSpeakClient, TextMessageTargetMode } from "ts3-nodejs-library"
 
 const teamspeak: any = {}
 const clientlistProps: any = {

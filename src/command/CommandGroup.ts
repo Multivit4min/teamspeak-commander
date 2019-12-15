@@ -1,4 +1,4 @@
-import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { TeamSpeakClient } from "ts3-nodejs-library"
 import { Commander } from "../Commander"
 import { CommanderTextMessage } from "../util/types"
 import { CommandNotFoundError } from "../exceptions/CommandNotFoundError"

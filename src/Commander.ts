@@ -3,8 +3,7 @@ import {
   TranslationString,
   TranslationStringGetter
 } from "./util/types"
-import { TeamSpeak, TextMessageTargetMode } from "ts3-nodejs-library/lib/TeamSpeak"
-import { TeamSpeakClient } from "ts3-nodejs-library/lib/node/Client"
+import { TeamSpeak, TeamSpeakClient, TextMessageEvent, TextMessageTargetMode } from "ts3-nodejs-library"
 import { Command } from "./command/Command"
 import { CommandGroup } from "./command/CommandGroup"
 import { BaseCommand } from "./command/BaseCommand"
@@ -14,7 +13,6 @@ import { ParseError } from "./exceptions/ParseError"
 import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
 import { Throttle } from "./util/Throttle"
-import { TextMessage } from "ts3-nodejs-library/lib/types/Events"
 
 export interface CommandErrorType<T extends Error> {
   cmd: BaseCommand
@@ -66,7 +64,7 @@ export class Commander {
     return new Throttle()
   }
 
-  private getTranslator(event: TextMessage): TranslationStringGetter {
+  private getTranslator(event: TextMessageEvent): TranslationStringGetter {
     return <T>(data: TranslationString<T>, args: T extends object ? T : never) => {
       return this.getTranslatedString({ client: event.invoker, data, ...args })
     }
@@ -140,7 +138,7 @@ export class Commander {
     }
   }
 
-  static getReplyFunction(event: TextMessage, teamspeak: TeamSpeak) {
+  static getReplyFunction(event: TextMessageEvent, teamspeak: TeamSpeak) {
     const { invoker } = event
     const { CLIENT, SERVER, CHANNEL } = TextMessageTargetMode
     switch (event.targetmode) {

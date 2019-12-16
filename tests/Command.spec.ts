@@ -10,7 +10,7 @@ describe("Command", () => {
   beforeEach(() => {
     commander = new Commander({ prefix: "!" })
     command = new Command("test", commander)
-    textEvent = textmessageEvent(jest.fn())
+    textEvent = textmessageEvent(commander)
   })
 
   describe("getPrefix()", () => {

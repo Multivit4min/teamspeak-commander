@@ -142,9 +142,12 @@ export class Commander {
   getReplyFunction(ev: TextMessageEvent) {
     const { CLIENT, SERVER, CHANNEL } = TextMessageTargetMode
     switch (ev.targetmode) {
-      case CLIENT: return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.clid, CLIENT, this.getTranslator(ev)(msg))
-      case CHANNEL: return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.cid, CHANNEL, this.getTranslator(ev)(msg))
-      case SERVER: return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(0, SERVER, this.getTranslator(ev)(msg))
+      case CLIENT:
+        return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.clid, CLIENT, this.getTranslator(ev)(msg))
+      case CHANNEL:
+        return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.cid, CHANNEL, this.getTranslator(ev)(msg))
+      case SERVER:
+        return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(0, SERVER, this.getTranslator(ev)(msg))
       default: throw new Error(`unknown targetmode ${ev.targetmode}`)
     }
   }

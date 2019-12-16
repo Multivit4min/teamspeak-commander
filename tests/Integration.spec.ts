@@ -3,7 +3,7 @@ import { CommanderTextMessage } from "../src/util/types"
 import { textmessageEvent } from "./mocks/textmessageEvent"
 import { ArgType } from "../src/arguments/ArgumentCreator"
 const runCallback = jest.fn()
-const replyCallback = jest.fn()
+const sendTextMessageMock = jest.fn()
 
 
 describe("Integration", () => {
@@ -12,10 +12,12 @@ describe("Integration", () => {
 
   beforeEach(() => {
     commander = new Commander({ prefix: "!" })
-    dummyEvent = textmessageEvent(replyCallback)
+    dummyEvent = textmessageEvent(commander, {
+      sendTextMessage: sendTextMessageMock
+    })
     runCallback.mockClear()
-    replyCallback.mockClear()
-    replyCallback.mockResolvedValue(null)
+    sendTextMessageMock.mockClear()
+    sendTextMessageMock.mockResolvedValue(null)
   })
 
   it("should test a simple command", () => {
@@ -27,7 +29,7 @@ describe("Integration", () => {
       commander["textMessageHandler"]({ ...dummyEvent, msg: "!test" })
       
       setImmediate(() => {
-        expect(replyCallback).toBeCalledTimes(0)
+        expect(sendTextMessageMock).toBeCalledTimes(0)
         expect(runCallback).toBeCalledTimes(1)
         expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
         expect(runCallback.mock.calls[0][0].msg).toBe("!test")
@@ -47,7 +49,7 @@ describe("Integration", () => {
       commander["textMessageHandler"]({ ...dummyEvent, msg: "!test 123" })
 
       setImmediate(() => {
-        expect(replyCallback).toBeCalledTimes(0)
+        expect(sendTextMessageMock).toBeCalledTimes(0)
         expect(runCallback).toBeCalledTimes(1)
         expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
         expect(runCallback.mock.calls[0][0].msg).toBe("!test 123")
@@ -67,7 +69,7 @@ describe("Integration", () => {
       commander["textMessageHandler"]({ ...dummyEvent, msg: "!test 123" })
 
       setImmediate(() => {
-        expect(replyCallback).toBeCalledTimes(0)
+        expect(sendTextMessageMock).toBeCalledTimes(0)
         expect(runCallback).toBeCalledTimes(1)
         expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
         expect(runCallback.mock.calls[0][0].msg).toBe("!test 123")
@@ -88,7 +90,7 @@ describe("Integration", () => {
         commander["textMessageHandler"]({ ...dummyEvent, msg: "!test NF61yPIiDvYuOJ/Bbeod84bw6dE=" })
   
         setImmediate(() => {
-          expect(replyCallback).toBeCalledTimes(0)
+          expect(sendTextMessageMock).toBeCalledTimes(0)
           expect(runCallback).toBeCalledTimes(1)
           expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
           expect(runCallback.mock.calls[0][0].msg).toBe("!test NF61yPIiDvYuOJ/Bbeod84bw6dE=")
@@ -110,7 +112,7 @@ describe("Integration", () => {
         commander["textMessageHandler"]({ ...dummyEvent,  msg })
 
         setImmediate(() => {
-          expect(replyCallback).toBeCalledTimes(0)
+          expect(sendTextMessageMock).toBeCalledTimes(0)
           expect(runCallback).toBeCalledTimes(1)
           expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
           expect(runCallback.mock.calls[0][0].msg).toBe(msg)
@@ -133,7 +135,7 @@ describe("Integration", () => {
         commander["textMessageHandler"]({ ...dummyEvent, msg: "!foo bar asdf" })
   
         setImmediate(() => {
-          expect(replyCallback).toBeCalledTimes(0)
+          expect(sendTextMessageMock).toBeCalledTimes(0)
           expect(runCallback).toBeCalledTimes(1)
           expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
           expect(runCallback.mock.calls[0][0].msg).toBe("!foo bar asdf")
@@ -156,7 +158,7 @@ describe("Integration", () => {
         commander["textMessageHandler"]({ ...dummyEvent, msg: "!foo baz asdf" })
   
         setImmediate(() => {
-          expect(replyCallback).toBeCalledTimes(0)
+          expect(sendTextMessageMock).toBeCalledTimes(0)
           expect(runCallback).toBeCalledTimes(1)
           expect(runCallback.mock.calls[0][0].invoker.nickname).toBe("foo")
           expect(runCallback.mock.calls[0][0].msg).toBe("!foo baz asdf")

@@ -34,6 +34,7 @@ export interface CommanderOptions extends TranslationMessages {
 
 export class Commander {
 
+  static DEFAULT_PREFIX = "!"
   readonly config: CommanderOptions
   private instances: TeamSpeak[] = []
   private commands: BaseCommand[] = []
@@ -138,14 +139,13 @@ export class Commander {
     }
   }
 
-  static getReplyFunction(event: TextMessageEvent, teamspeak: TeamSpeak) {
-    const { invoker } = event
+  getReplyFunction(ev: TextMessageEvent) {
     const { CLIENT, SERVER, CHANNEL } = TextMessageTargetMode
-    switch (event.targetmode) {
-      case CLIENT: return (msg: string) => teamspeak.sendTextMessage(invoker.clid, CLIENT, msg)
-      case CHANNEL: return (msg: string) => teamspeak.sendTextMessage(invoker.cid, CHANNEL, msg)
-      case SERVER: return (msg: string) => teamspeak.sendTextMessage(0, SERVER, msg)
-      default: throw new Error(`unknown targetmode ${event.targetmode}`)
+    switch (ev.targetmode) {
+      case CLIENT: return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.clid, CLIENT, this.getTranslator(ev)(msg))
+      case CHANNEL: return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.cid, CHANNEL, this.getTranslator(ev)(msg))
+      case SERVER: return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(0, SERVER, this.getTranslator(ev)(msg))
+      default: throw new Error(`unknown targetmode ${ev.targetmode}`)
     }
   }
 
@@ -242,7 +242,7 @@ export class Commander {
       this.textMessageHandler({
         ...ev,
         teamspeak,
-        reply: Commander.getReplyFunction(ev, teamspeak),
+        reply: this.getReplyFunction(ev),
         args: {}
       })
     })
@@ -256,8 +256,4 @@ export class Commander {
   static isValidCommandName(name: string) {
     return name.length > 0 && !(/^\S$/).test(name)
   }
-}
-
-export namespace Commander {
-  export const DEFAULT_PREFIX = "!"
 }

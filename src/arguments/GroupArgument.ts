@@ -28,7 +28,7 @@ export class GroupArgument extends Argument {
    * @param {string} args the remaining args
    */
   private validateOr(args: string) {
-    const errors = []
+    const errors: Error[] = []
     const resolved: Record<string, any> = {}
     const valid = this.arguments.some(arg => {
       try {

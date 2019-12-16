@@ -7,7 +7,7 @@ import { Commander } from "Commander"
 export interface CommanderTextMessage extends TextMessageEvent {
   args: Record<string, any>
   teamspeak: TeamSpeak
-  reply: (msg: string) => Promise<any>
+  reply: (msg: TranslationString) => Promise<any>
 }
 
 /**

@@ -1,6 +1,6 @@
 {
   "name": "teamspeak-commander",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TeamSpeak Command Library",
   "main": "lib/index.js",
   "homepage": "https://github.com/Multivit4min/TS3-NodeJS-Library",

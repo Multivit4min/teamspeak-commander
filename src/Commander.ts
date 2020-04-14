@@ -13,6 +13,7 @@ import { ParseError } from "./exceptions/ParseError"
 import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
 import { Throttle } from "./util/Throttle"
+import { EventEmitter } from "events"
 
 export interface CommandErrorType<T extends Error> {
   cmd: BaseCommand
@@ -32,7 +33,7 @@ export interface CommanderOptions extends TranslationMessages {
   prefix: string
 }
 
-export class Commander {
+export class Commander extends EventEmitter {
 
   static DEFAULT_PREFIX = "!"
   readonly config: CommanderOptions
@@ -40,6 +41,7 @@ export class Commander {
   private commands: BaseCommand[] = []
 
   constructor(config: Partial<CommanderOptions> = {}) {
+    super()
     this.config = {
       prefix: Commander.DEFAULT_PREFIX,
       COMMAND_NOT_FOUND: "no command found",
@@ -98,7 +100,7 @@ export class Commander {
     }
   }
 
-  private async textMessageHandler(event: CommanderTextMessage) {
+  private async textMessageHandler(event: CommanderTextMessage<any>) {
     if (event.invoker.isQuery()) return
     if (!this.isPossibleCommand(event.msg)) return
     const t = this.getTranslator(event)
@@ -117,7 +119,7 @@ export class Commander {
   private async runCommand(
     cmd: BaseCommand,
     args: string,
-    event: CommanderTextMessage,
+    event: CommanderTextMessage<any>,
     translate: TranslationStringGetter
   ) {
     try {
@@ -147,7 +149,7 @@ export class Commander {
       case CHANNEL:
         return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(ev.invoker.cid, CHANNEL, this.getTranslator(ev)(msg))
       case SERVER:
-        return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage(0, SERVER, this.getTranslator(ev)(msg))
+        return (msg: TranslationString) => ev.invoker.getParent().sendTextMessage("0", SERVER, this.getTranslator(ev)(msg))
       default: throw new Error(`unknown targetmode ${ev.targetmode}`)
     }
   }

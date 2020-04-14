@@ -70,7 +70,7 @@ export class CommandGroup extends BaseCommand {
     return this.commander.checkPermissions(cmds, client)
   }
 
-  handleRequest(args: string, ev: CommanderTextMessage) {
+  handleRequest(args: string, ev: CommanderTextMessage<any>) {
     const [cmd, ...rest] = args.split(" ")
     if (cmd.length === 0) return this.dispatchCommand(ev)
     return this.findSubCommandByName(cmd).handleRequest(rest.join(" "), ev)

@@ -55,7 +55,7 @@ export class Command extends BaseCommand {
     return result
   }
 
-  handleRequest(args: string, ev: CommanderTextMessage) {
+  handleRequest(args: string, ev: CommanderTextMessage<any>) {
     return this.dispatchCommand({ ...ev, args: this.validate(args) })
   }
 

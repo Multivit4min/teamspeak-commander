@@ -1,11 +1,11 @@
 import { TeamSpeak, TeamSpeakClient, TextMessageEvent } from "ts3-nodejs-library"
-import { Commander } from "Commander"
+import { Commander } from "../Commander"
 
 /**
  * the commander text message event which extends the default teamspeak chat event
  */
-export interface CommanderTextMessage extends TextMessageEvent {
-  args: Record<string, any>
+export interface CommanderTextMessage<T extends {} = Record<string, any>> extends TextMessageEvent {
+  args: T
   teamspeak: TeamSpeak
   reply: (msg: TranslationString) => Promise<any>
 }

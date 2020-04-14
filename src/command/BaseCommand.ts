@@ -5,12 +5,12 @@ import { Throttle } from "../util/Throttle"
 import { ThrottleError } from "../exceptions/ThrottleError"
 
 export type permissionHandler = (invoker: TeamSpeakClient) => Promise<boolean>|boolean
-export type runHandler = (event: CommanderTextMessage) => (Promise<void>|void)
+export type runHandler<T extends {}> = (event: CommanderTextMessage<T>) => (Promise<void>|void)
 
 export abstract class BaseCommand {
   protected commander: Commander
   protected permissionHandler: permissionHandler[] = []
-  protected runHandler: runHandler[] = []
+  protected runHandler: runHandler<any>[] = []
   private cmdPrefix: string = ""
   private cmdHelp: TranslationString = ""
   private cmdManual: TranslationString[] = []
@@ -26,7 +26,7 @@ export abstract class BaseCommand {
   abstract getUsage(): string
   abstract hasPermission(client: TeamSpeakClient): Promise<boolean>
   abstract validate(args: string): Record<string, any>
-  abstract async handleRequest(args: string, ev: CommanderTextMessage): Promise<void>
+  abstract async handleRequest(args: string, ev: CommanderTextMessage<any>): Promise<void>
 
   /** checks if the command is enabled */
   isEnabled() {
@@ -125,7 +125,7 @@ export abstract class BaseCommand {
    * register an execution handler for this command
    * @param callback gets called whenever the command should do something
    */
-  run(callback: runHandler) {
+  run<T extends {} = Record<string, any>>(callback: runHandler<T>) {
     this.runHandler.push(callback)
     return this
   }
@@ -162,7 +162,7 @@ export abstract class BaseCommand {
     return (await Promise.all(this.permissionHandler.map(cb => cb(client)))).every(result => result)
   }
 
-  protected async dispatchCommand(ev: CommanderTextMessage) {
+  protected async dispatchCommand(ev: CommanderTextMessage<any>) {
     this.handleThrottle(ev.invoker)
     await Promise.all(this.runHandler.map(handle => handle({...ev})))
   }

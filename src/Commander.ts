@@ -14,6 +14,7 @@ import { PermissionError } from "./exceptions/PermissionError"
 import { CommandNotFoundError } from "./exceptions/CommandNotFoundError"
 import { Throttle } from "./util/Throttle"
 import { EventEmitter } from "events"
+import { CommandCollector } from "./util/CommandCollector"
 
 export interface CommandErrorType<T extends Error> {
   cmd: BaseCommand
@@ -38,10 +39,11 @@ export class Commander extends EventEmitter {
   static DEFAULT_PREFIX = "!"
   readonly config: CommanderOptions
   private instances: TeamSpeak[] = []
-  private commands: BaseCommand[] = []
+  private collector: CommandCollector
 
   constructor(config: Partial<CommanderOptions> = {}) {
     super()
+    this.collector = new CommandCollector()
     this.config = {
       prefix: Commander.DEFAULT_PREFIX,
       COMMAND_NOT_FOUND: "no command found",
@@ -107,13 +109,13 @@ export class Commander extends EventEmitter {
     const match = event.msg.match(/^(?<command>\S*)\s*(?<args>.*)\s*/s)
     if (!match || !match.groups) return
     const { command, args } = match.groups
-    let commands = this.getAvailableCommands(command)
-    if (commands.length === 0)
+    let collector = this.getAvailableCommands(command)
+    if (collector.commands.length === 0)
       return event.reply(t(this.config.COMMAND_NOT_FOUND))
-    commands = await this.checkPermissions(commands, event.invoker)
-    if (commands.length === 0)
+    collector = await collector.getCommandsWithPermission(event.invoker)
+    if (collector.commands.length === 0)
       return event.reply(t(this.config.COMMAND_NO_PERMISSION))
-    commands.forEach(cmd => this.runCommand(cmd, args, event, t))
+    collector.commands.forEach(cmd => this.runCommand(cmd, args, event, t))
   }
 
   private async runCommand(
@@ -154,11 +156,8 @@ export class Commander extends EventEmitter {
     }
   }
 
-  async checkPermissions(commands: BaseCommand[], client: TeamSpeakClient) {
-    const result = await Promise.all(commands.map(async cmd => await cmd.hasPermission(client)))
-    return <BaseCommand[]>result
-      .map((res, i) => res ? commands[i] : false)
-      .filter(res => res instanceof BaseCommand)
+  async checkPermissions(collector: CommandCollector, client: TeamSpeakClient) {
+    return collector.getCommandsWithPermission(client)
   }
 
   /**
@@ -166,9 +165,8 @@ export class Commander extends EventEmitter {
    * @param name the name to find
    */
   getAvailableCommands(name?: string) {
-    return this.commands
-      .filter(cmd => cmd.isEnabled())
-      .filter(cmd => !name || cmd.getCommandName() === name || cmd.getFullCommandName() === name)
+    const collector = this.collector.getEnabled()
+    return name ? collector.withName(name) : collector
   }
 
   /**
@@ -177,15 +175,7 @@ export class Commander extends EventEmitter {
    * @param client the requesting client 
    */
   searchAvailableCommands(name: string, client: TeamSpeakClient) {
-    return this.commands
-      .filter(cmd => cmd.isEnabled())
-      .filter(cmd => {
-        const regex = new RegExp(name, "i")
-        return (
-          regex.test(cmd.getFullCommandName()) ||
-          regex.test(cmd.getHelp(client))
-        )
-      })
+    return this.collector.withNameLike(name, client)
   }
 
   /**
@@ -194,7 +184,7 @@ export class Commander extends EventEmitter {
    * @param filter the name to prefilter commands
    */
   getAvailableCommandsWithPermission(client: TeamSpeakClient, filter?: string) {
-    const cmds = filter ? this.searchAvailableCommands(filter, client) : this.commands
+    const cmds = filter ? this.searchAvailableCommands(filter, client) : this.collector
     return this.checkPermissions(cmds, client)
   }
 
@@ -204,7 +194,7 @@ export class Commander extends EventEmitter {
 
   isPossibleCommand(text: string) {
     if (text.startsWith(this.prefix())) return true
-    return this.commands.some(cmd => cmd.getFullCommandName() === text.split(" ")[0])
+    return this.collector.commands.some(cmd => cmd.getFullCommandName() === text.split(" ")[0])
   }
 
   /**
@@ -214,7 +204,7 @@ export class Commander extends EventEmitter {
   createCommand(name: string) {
     if (!Commander.isValidCommandName(name)) throw new Error("Can not create a command with length of 0")
     const cmd = new Command(name, this)
-    this.commands.push(cmd)
+    this.collector.addCommand(cmd)
     return cmd
   }
 
@@ -225,7 +215,7 @@ export class Commander extends EventEmitter {
   createCommandGroup(name: string) {
     if (!Commander.isValidCommandName(name)) throw new Error("Can not create a command with length of 0")
     const cmd = new CommandGroup(name, this)
-    this.commands.push(cmd)
+    this.collector.addCommand(cmd)
     return cmd
   }
 

@@ -175,7 +175,7 @@ describe("Command", () => {
       textEvent.targetmode = TextMessageTargetMode.CLIENT
       await commander.getReplyFunction(textEvent)("foo")
       expect(sendTextMessageMock).toHaveBeenCalledTimes(1)
-      expect(sendTextMessageMock).toBeCalledWith(1337, TextMessageTargetMode.CLIENT, "foo")
+      expect(sendTextMessageMock).toBeCalledWith("1337", TextMessageTargetMode.CLIENT, "foo")
     })
 
     it("should retrieve the correct function to reply to a channel", async () => {
@@ -183,7 +183,7 @@ describe("Command", () => {
       textEvent.targetmode = TextMessageTargetMode.CHANNEL
       await commander.getReplyFunction(textEvent)("foo")
       expect(sendTextMessageMock).toHaveBeenCalledTimes(1)
-      expect(sendTextMessageMock).toBeCalledWith(1338, TextMessageTargetMode.CHANNEL, "foo")
+      expect(sendTextMessageMock).toBeCalledWith("1338", TextMessageTargetMode.CHANNEL, "foo")
     })
 
     it("should retrieve the correct function to reply to a server", async () => {
@@ -191,7 +191,7 @@ describe("Command", () => {
       textEvent.targetmode = TextMessageTargetMode.SERVER
       await commander.getReplyFunction(textEvent)("foo")
       expect(sendTextMessageMock).toHaveBeenCalledTimes(1)
-      expect(sendTextMessageMock).toBeCalledWith(0, TextMessageTargetMode.SERVER, "foo")
+      expect(sendTextMessageMock).toBeCalledWith("0", TextMessageTargetMode.SERVER, "foo")
     })
   })
 

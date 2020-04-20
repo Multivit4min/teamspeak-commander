@@ -12,9 +12,9 @@ const TeamSpeak = (mocks: Mocks): any => ({
 })
 
 const clientlistProps: any = {
-  client_nickname: "foo",
-  clid: 1337,
-  cid: 1338
+  clientNickname: "foo",
+  clid: "1337",
+  cid: "1338"
 }
 
 export const textmessageEvent = (commander: Commander, mocks: Mocks = {}): CommanderTextMessage => {

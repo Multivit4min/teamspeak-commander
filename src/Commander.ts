@@ -109,7 +109,7 @@ export class Commander extends EventEmitter {
     const match = event.msg.match(/^(?<command>\S*)\s*(?<args>.*)\s*/s)
     if (!match || !match.groups) return
     const { command, args } = match.groups
-    let collector = this.getAvailableCommands(command)
+    let collector = this.collector.withName(command)
     if (collector.commands.length === 0)
       return event.reply(t(this.config.COMMAND_NOT_FOUND))
     collector = await collector.getCommandsWithPermission(event.invoker)

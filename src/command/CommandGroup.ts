@@ -5,6 +5,7 @@ import { CommandNotFoundError } from "../exceptions/CommandNotFoundError"
 import { Command } from "./Command"
 import { BaseCommand } from "./BaseCommand"
 import { CommandCollector } from "../util/CommandCollector"
+import { PermissionError } from "../exceptions/PermissionError"
 
 export class CommandGroup extends BaseCommand {
   private collector: CommandCollector<Command>
@@ -71,9 +72,13 @@ export class CommandGroup extends BaseCommand {
     return collector
   }
 
-  handleRequest(args: string, ev: CommanderTextMessage<any>) {
+  async handleRequest(args: string, ev: CommanderTextMessage<any>) {
     const [cmd, ...rest] = args.split(" ")
     if (cmd.length === 0) return this.dispatchCommand(ev)
-    return this.findSubCommandByName(cmd).handleRequest(rest.join(" "), ev)
+    let collector = this.collector.withName(cmd)
+    if (collector.commands.length === 0) throw new CommandNotFoundError(`sub command with name ${cmd} not found`)
+    collector = await collector.getCommandsWithPermission(ev.invoker)
+    if (collector.commands.length === 0) throw new PermissionError("no permission to use this sub command")
+    collector.commands.map(cmd => cmd.handleRequest(rest.join(" "), ev))
   }
 }
